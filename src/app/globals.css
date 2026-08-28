@@ -243,6 +243,22 @@ h3 { font-size: clamp(1.125rem, 3vw, 1.5rem); }
   box-shadow: 0 4px 16px rgba(196, 69, 69, 0.3);
 }
 
+.btn-premium {
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, var(--color-accent-gold-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(201, 168, 76, 0.35), 0 0 30px rgba(201, 168, 76, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-premium:hover {
+  box-shadow: 0 6px 24px rgba(201, 168, 76, 0.5), 0 0 40px rgba(201, 168, 76, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-premium:active {
+  transform: scale(0.97);
+}
+
 .btn-lg {
   padding: var(--space-md) var(--space-xl);
   font-size: 1.1rem;

@@ -41,4 +41,27 @@ export const authOptions: NextAuthOptions = {
     strategy: 'database',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  events: {
+    async createUser({ user }) {
+      // Fill username/avatarUrl from Google profile if default
+      if (user.name || user.image) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            username: user.name || user.email?.split('@')[0] || 'Joueur',
+            avatarUrl: user.image || undefined,
+          },
+        });
+      }
+      // Give 3 welcome packs to new user (will be PENDING until approved, but created now)
+      // Packs are usable only after APPROVED, so safe to grant now
+      const welcomeCount = 3;
+      await prisma.boosterPack.createMany({
+        data: Array.from({ length: welcomeCount }, () => ({
+          ownerId: user.id,
+          packType: 'WELCOME',
+        })),
+      });
+    },
+  },
 };

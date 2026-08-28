@@ -27,15 +27,18 @@ enum UserStatus {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
-  username     String
-  avatarUrl    String?    @map("avatar_url")
-  role         UserRole   @default(PLAYER)
-  status       UserStatus @default(PENDING)
-  dustBalance  Int        @default(0) @map("dust_balance")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  approvedAt   DateTime?  @map("approved_at")
+  id            String     @id @default(uuid())
+  name          String?
+  email         String     @unique
+  emailVerified DateTime?  @map("email_verified")
+  image         String?
+  username      String     @default("")
+  avatarUrl     String?    @map("avatar_url")
+  role          UserRole   @default(PLAYER)
+  status        UserStatus @default(PENDING)
+  dustBalance   Int        @default(0) @map("dust_balance")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  approvedAt    DateTime?  @map("approved_at")
 
   // Relations
   cards        UserCard[]
