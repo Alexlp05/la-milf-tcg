@@ -1,0 +1,207 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// USER SYSTEM
+// ==========================================
+
+enum UserRole {
+  PLAYER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  BANNED
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  username     String
+  avatarUrl    String?    @map("avatar_url")
+  role         UserRole   @default(PLAYER)
+  status       UserStatus @default(PENDING)
+  dustBalance  Int        @default(0) @map("dust_balance")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  approvedAt   DateTime?  @map("approved_at")
+
+  // Relations
+  cards        UserCard[]
+  boosters     BoosterPack[]
+  accounts     Account[]
+  sessions     Session[]
+
+  @@map("users")
+}
+
+// ==========================================
+// NEXTAUTH TABLES
+// ==========================================
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ==========================================
+// CARD SYSTEM
+// ==========================================
+
+enum CardType {
+  PERSONNAGE
+  SOUVENIR
+  LIEU
+  OBJET
+  REFERENCE
+}
+
+enum Rarity {
+  COMMUNE
+  PEU_COMMUNE
+  RARE
+  ULTRA_RARE
+  SHINY
+  GOLD
+}
+
+model Card {
+  id                String   @id // e.g. "card_001"
+  name              String   // e.g. "T-Max"
+  title             String   // e.g. "Le bouffeur de fumigène"
+  type              CardType
+  overallScore      Int      @map("overall_score") // 0-100
+  illustrationUrl   String?  @map("illustration_url")
+  iconUrl           String?  @map("icon_url")
+  actionDescription String   @map("action_description")
+  actionValue       Int      @map("action_value")
+  loreAlbum         String   @map("lore_album") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // Relations
+  scarcityLimits CardScarcity[]
+  instances      UserCard[]
+
+  @@map("cards")
+}
+
+/// Tracks the global supply for each card+rarity combination.
+/// This is the table that gets locked during booster openings
+/// to prevent race conditions on numbered cards.
+model CardScarcity {
+  id            Int     @id @default(autoincrement())
+  cardId        String  @map("card_id")
+  rarity        Rarity
+  maxSupply     Int?    @map("max_supply") // NULL = unlimited
+  currentSupply Int     @default(0) @map("current_supply")
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, rarity])
+  @@map("card_scarcity")
+}
+
+// ==========================================
+// PLAYER INVENTORY
+// ==========================================
+
+model UserCard {
+  instanceId   String   @id @default(uuid()) @map("instance_id")
+  cardId       String   @map("card_id")
+  ownerId      String   @map("owner_id")
+  pulledRarity Rarity   @map("pulled_rarity")
+  mintNumber   Int?     @map("mint_number")  // NULL for unlimited rarities
+  maxMint      Int?     @map("max_mint")     // NULL for unlimited rarities
+  dustValue    Int      @default(0) @map("dust_value")
+  acquiredAt   DateTime @default(now()) @map("acquired_at")
+  isDusted     Boolean  @default(false) @map("is_dusted")
+
+  card  Card @relation(fields: [cardId], references: [id])
+  owner User @relation(fields: [ownerId], references: [id])
+
+  @@map("user_cards")
+}
+
+// ==========================================
+// BOOSTER SYSTEM
+// ==========================================
+
+enum PackType {
+  STANDARD
+  PREMIUM
+  WELCOME
+}
+
+enum PackStatus {
+  UNOPENED
+  OPENED
+}
+
+model BoosterPack {
+  id        String     @id @default(uuid())
+  ownerId   String     @map("owner_id")
+  packType  PackType   @default(STANDARD) @map("pack_type")
+  status    PackStatus @default(UNOPENED)
+  grantedAt DateTime   @default(now()) @map("granted_at")
+  openedAt  DateTime?  @map("opened_at")
+
+  owner User @relation(fields: [ownerId], references: [id])
+
+  @@map("booster_packs")
+}
+
+// ==========================================
+// GAME CONFIG (tunable probabilities, etc.)
+// ==========================================
+
+model GameConfig {
+  key   String @id
+  value String @db.Text // JSON string for complex values
+
+  @@map("game_config")
+}
