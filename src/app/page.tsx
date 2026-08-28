@@ -1,23 +1,33 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './home.module.css';
 
 export default function HomePage() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [stats, setStats] = useState({ unopenedPacks: 0, totalCards: 0, uniqueCards: 0, dustBalance: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
+    if (status === 'unauthenticated') router.replace('/login');
+    if (status === 'authenticated') {
+      const s = session?.user as any;
+      if (s?.status === 'PENDING') router.replace('/waiting-approval');
+      else if (s?.status === 'BANNED') router.replace('/login');
+    }
+  }, [status, session, router]);
+
+  useEffect(() => {
     if (status === 'authenticated') {
       fetch('/api/me')
         .then(r => r.json())
         .then(d => {
-          if (d.stats) setStats({ ...d.stats, dustBalance: d.user?.dustBalance ?? session?.user?.dustBalance ?? 0 });
+          if (d.stats) setStats({ ...d.stats, dustBalance: d.user?.dustBalance ?? (session?.user as any)?.dustBalance ?? 0 });
         })
         .catch(() => {})
         .finally(() => setLoadingStats(false));
@@ -34,9 +44,8 @@ export default function HomePage() {
     );
   }
 
-  if (!session) redirect('/login');
-  if ((session.user as any).status === 'PENDING') redirect('/login');
-  if ((session.user as any).status === 'BANNED') redirect('/login');
+  if (!session) return null;
+  if ((session.user as any).status === 'PENDING' || (session.user as any).status === 'BANNED') return null;
 
   const user = session.user as any;
   const initials = user.username?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase();

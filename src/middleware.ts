@@ -3,14 +3,15 @@ import { NextResponse } from 'next/server';
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token;
+    const token = req.nextauth.token as any;
     const path = req.nextUrl.pathname;
 
+    // Admin only
     if (path.startsWith('/admin') && token?.role !== 'ADMIN') {
       return NextResponse.redirect(new URL('/', req.url));
     }
-
-    if (path.startsWith('/open-pack') && token?.status !== 'APPROVED') {
+    // PENDING/BANNED cannot open packs -> waiting
+    if (path.startsWith('/open-pack') && token?.status && token.status !== 'APPROVED') {
       return NextResponse.redirect(new URL('/waiting-approval', req.url));
     }
 
@@ -20,7 +21,9 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
-        if (path.startsWith('/admin')) return token?.role === 'ADMIN';
+        // Public pages
+        if (path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/waiting-approval')) return true;
+        if (path.startsWith('/admin')) return (token as any)?.role === 'ADMIN';
         if (path.startsWith('/open-pack') || path.startsWith('/collection')) return !!token;
         return true;
       },

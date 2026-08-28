@@ -12,16 +12,29 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        const dbUser = user as any;
-        session.user.id = dbUser.id;
-        session.user.username = dbUser.username;
-        session.user.role = dbUser.role;
-        session.user.status = dbUser.status;
-        session.user.dustBalance = dbUser.dustBalance;
-        session.user.image = dbUser.image || dbUser.avatarUrl || session.user.image;
-        session.user.name = dbUser.name || dbUser.username;
+    async jwt({ token, user }) {
+      if (user) {
+        const u = user as any;
+        token.id = u.id;
+        token.username = u.username;
+        token.role = u.role;
+        token.status = u.status;
+        token.dustBalance = u.dustBalance;
+        token.picture = u.image || u.avatarUrl || token.picture;
+      }
+      return token;
+    },
+    async session({ session, token, user }) {
+      // JWT strategy: use token. Database fallback: use user if present
+      const src: any = (token as any)?.id ? token : user;
+      if (session.user && src) {
+        (session.user as any).id = src.id || (src as any).sub;
+        (session.user as any).username = src.username;
+        (session.user as any).role = src.role;
+        (session.user as any).status = src.status;
+        (session.user as any).dustBalance = src.dustBalance;
+        session.user.image = src.image || src.avatarUrl || session.user.image;
+        session.user.name = src.name || src.username;
       }
       return session;
     },
@@ -41,11 +54,11 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/login',
     error: '/auth/error',
   },
   session: {
-    strategy: 'database',
+    strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET,
   events: {
