@@ -18,6 +18,7 @@ export interface CardData {
   iconUrl?: string;
   actionDescription: string;
   actionValue: number;
+  loreAlbum?: string;
 }
 
 export interface CardFrameProps {

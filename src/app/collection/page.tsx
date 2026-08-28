@@ -17,8 +17,8 @@ const MOCK_COLLECTION: { instanceId: string; card: CardData; rarity: CardRarity;
       overallScore: 94,
       actionDescription: 'Écarte les bras dans la passion.',
       actionValue: 15,
-      // We extend CardData in the frontend to include lore just for display if needed
-    } as CardData & { loreAlbum?: string },
+      loreAlbum: "Les savants disent qu'il n'existe pas meilleur crâne rasé que celui de Ludo.",
+    },
     rarity: 'SHINY',
     mintNumber: 2,
     maxMint: 3,
@@ -34,7 +34,8 @@ const MOCK_COLLECTION: { instanceId: string; card: CardData; rarity: CardRarity;
       overallScore: 72,
       actionDescription: 'Restaure 30 points de dignité.',
       actionValue: 30,
-    } as CardData,
+      loreAlbum: "Certains disent que ce kebab a sauvé plus de vies que la Croix-Rouge.",
+    },
     rarity: 'COMMUNE',
     quantity: 4,
   },
@@ -48,16 +49,12 @@ const MOCK_COLLECTION: { instanceId: string; card: CardData; rarity: CardRarity;
       overallScore: 88,
       actionDescription: "Inflige 25 dégâts d'amitié.",
       actionValue: 25,
-    } as CardData,
+      loreAlbum: "La gifle amicale est un rituel sacré. La recevoir, c'est être accepté.",
+    },
     rarity: 'PEU_COMMUNE',
     quantity: 2,
   },
 ];
-
-// Add lore to mock data for the detail view
-MOCK_COLLECTION[0].card['loreAlbum' as keyof CardData] = "Les savants disent qu'il n'existe pas meilleur crâne rasé que celui de Ludo.";
-MOCK_COLLECTION[1].card['loreAlbum' as keyof CardData] = "Certains disent que ce kebab a sauvé plus de vies que la Croix-Rouge.";
-MOCK_COLLECTION[2].card['loreAlbum' as keyof CardData] = "La gifle amicale est un rituel sacré. La recevoir, c'est être accepté.";
 
 type FilterType = 'ALL' | CardType | CardRarity;
 

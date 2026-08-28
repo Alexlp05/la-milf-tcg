@@ -151,10 +151,10 @@ export default function OpenPackPage() {
         {(packState === 'DISTRIBUTED' || packState === 'REVEALING' || packState === 'FINISHED') && (
           <div className={styles.cardsContainer}>
             {MOCK_PULLS.map((pull, i) => (
-              <div 
-                key={i} 
-                className={`${styles.cardSlot} ${packState !== 'TEARING' ? styles.visible : ''}`}
-                style={{ 
+<div 
+                  key={i} 
+                  className={`${styles.cardSlot} ${styles.visible}`}
+                  style={{
                   zIndex: activeCardIndex === i ? 50 : 1,
                   // Bring the active card forward and dim the others
                   transform: activeCardIndex === i ? 'scale(1.1) translateY(-20px)' : '',
