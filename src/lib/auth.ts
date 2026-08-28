@@ -14,7 +14,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
-        session.user.id = user.id;
+        const dbUser = user as any;
+        session.user.id = dbUser.id;
+        session.user.username = dbUser.username;
+        session.user.role = dbUser.role;
+        session.user.status = dbUser.status;
+        session.user.dustBalance = dbUser.dustBalance;
+        session.user.image = dbUser.image || dbUser.avatarUrl || session.user.image;
+        session.user.name = dbUser.name || dbUser.username;
       }
       return session;
     },
