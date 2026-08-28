@@ -1,0 +1,445 @@
+/* ==========================================
+   TCG CARD COMPONENT
+   Style: Classic TCG frames (Pokémon/Yu-Gi-Oh inspired)
+   ========================================== */
+
+.cardWrapper {
+  perspective: 1200px;
+  width: 280px;
+  height: 392px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cardInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.cardFlipped .cardInner {
+  transform: rotateY(180deg);
+}
+
+/* ==========================================
+   CARD BACK (face-down state)
+   ========================================== */
+.cardBack {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2a2318 0%, #1a1612 50%, #2a2318 100%);
+  border: 3px solid var(--color-accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.cardBack::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1.5px solid rgba(201, 168, 76, 0.3);
+  border-radius: 10px;
+}
+
+.cardBack::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 15px,
+    rgba(201, 168, 76, 0.03) 15px,
+    rgba(201, 168, 76, 0.03) 16px
+  );
+}
+
+.cardBackLogo {
+  font-size: 3.5rem;
+  z-index: 1;
+  filter: drop-shadow(0 2px 8px rgba(201, 168, 76, 0.4));
+}
+
+/* ==========================================
+   CARD FRONT (face-up state)
+   ========================================== */
+.cardFront {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================
+   CARD FRAME (rarity-based borders)
+   ========================================== */
+.cardFrame {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  border: 3px solid;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.frameCommune { border-color: #8c8c8c; }
+.framePeuCommune { border-color: #4a9e6b; }
+.frameRare { border-color: #4a7cc9; }
+
+.frameUltraRare {
+  border-color: #9b59b6;
+  box-shadow: inset 0 0 15px rgba(155, 89, 182, 0.15);
+}
+
+.frameShiny {
+  border-width: 3px;
+  border-style: solid;
+  border-image: linear-gradient(135deg, #e8d48b 0%, #c9a84c 30%, #f5e6a3 50%, #c9a84c 70%, #a88932 100%) 1;
+  border-radius: 14px;
+  box-shadow: 
+    inset 0 0 20px rgba(201, 168, 76, 0.2),
+    0 0 20px rgba(201, 168, 76, 0.3);
+}
+
+.frameGold {
+  border-width: 4px;
+  border-style: solid;
+  border-image: linear-gradient(135deg, #ffd700 0%, #ffb800 25%, #fff4b0 50%, #ffc800 75%, #daa520 100%) 1;
+  border-radius: 14px;
+  box-shadow: 
+    inset 0 0 25px rgba(255, 215, 0, 0.15),
+    0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+/* ==========================================
+   CARD HEADER (Name + Score)
+   ========================================== */
+.cardHeader {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.9) 100%);
+}
+
+.cardNameBlock {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardScore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.scoreCommune { background: #e8e8e8; color: #555; }
+.scorePeuCommune { background: #d4f0df; color: #2d6b45; }
+.scoreRare { background: #d4e5f7; color: #2d5a8b; }
+.scoreUltraRare { background: #e8d8f4; color: #6b3d8f; }
+.scoreShiny { 
+  background: linear-gradient(135deg, #fff7d4, #f5e6a3); 
+  color: #8b7634; 
+  box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+}
+.scoreGold { 
+  background: linear-gradient(135deg, #fff4b0, #ffd700); 
+  color: #7a5c00; 
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+/* ==========================================
+   CARD ILLUSTRATION AREA
+   ========================================== */
+.cardIllustration {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e4dc;
+  margin: 0 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  min-height: 160px;
+}
+
+.illustrationPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.placeholderIcon {
+  font-size: 2.5rem;
+  opacity: 0.4;
+}
+
+.illustrationImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==========================================
+   CARD ACTION SECTION
+   ========================================== */
+.cardAction {
+  position: relative;
+  z-index: 3;
+  padding: 10px 14px;
+  background: linear-gradient(0deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.93) 100%);
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.15), rgba(201, 168, 76, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.actionText {
+  flex: 1;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+  min-width: 0;
+}
+
+.actionValue {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-accent-gold-dark);
+  flex-shrink: 0;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ==========================================
+   CARD FOOTER (Type + Mint)
+   ========================================== */
+.cardFooter {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px 10px;
+  background: rgba(255, 255, 255, 0.97);
+}
+
+.cardTypeBadge {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-full);
+}
+
+.mintNumber {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mintCommune { color: var(--color-text-muted); }
+.mintShiny { color: var(--color-accent-gold-dark); }
+.mintGold { 
+  color: #b8860b;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+/* ==========================================
+   SHINY EFFECT OVERLAY
+   ========================================== */
+.shinyOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.shinyOverlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.1) 30%,
+    rgba(201, 168, 76, 0.15) 40%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 60%
+  );
+  background-size: 200% 200%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* ==========================================
+   GOLD EFFECT OVERLAY
+   ========================================== */
+.goldOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.goldOverlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 15%,
+    rgba(255, 215, 0, 0.08) 25%,
+    rgba(255, 255, 255, 0.15) 35%,
+    rgba(255, 215, 0, 0.12) 45%,
+    rgba(255, 255, 255, 0.2) 55%,
+    transparent 65%
+  );
+  background-size: 200% 200%;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+.goldOverlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 215, 0, 0.04);
+  mix-blend-mode: overlay;
+}
+
+/* ==========================================
+   REVEAL ANIMATION STATES
+   ========================================== */
+.revealPhaseA .cardHeader {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.revealPhaseA .cardIllustration,
+.revealPhaseA .cardAction {
+  opacity: 0;
+}
+
+.revealPhaseB .cardAction {
+  animation: fadeInUp 0.4s ease 0.1s forwards;
+  opacity: 0;
+}
+
+.revealPhaseB .cardIllustration {
+  opacity: 0;
+}
+
+.revealPhaseC .cardIllustration {
+  animation: revealFlash 0.8s ease forwards;
+}
+
+/* ==========================================
+   CARD HOVER EFFECT (desktop)
+   ========================================== */
+@media (hover: hover) {
+  .cardWrapper:hover .cardInner {
+    transform: translateY(-4px);
+    filter: brightness(1.02);
+  }
+
+  .cardFlipped:hover .cardInner {
+    transform: rotateY(180deg) translateY(-4px);
+    filter: brightness(1.02);
+  }
+}
+
+/* ==========================================
+   CARD SIZE VARIANTS
+   ========================================== */
+.cardSmall {
+  width: 140px;
+  height: 196px;
+}
+
+.cardSmall .cardName { font-size: 0.7rem; }
+.cardSmall .cardTitle { font-size: 0.55rem; }
+.cardSmall .cardScore { width: 24px; height: 24px; font-size: 0.65rem; }
+.cardSmall .cardAction { display: none; }
+.cardSmall .cardHeader { padding: 6px 8px 4px; }
+.cardSmall .cardFooter { padding: 4px 8px 6px; }
+.cardSmall .cardTypeBadge { font-size: 0.5rem; }
+.cardSmall .mintNumber { font-size: 0.55rem; }
+
+.cardLarge {
+  width: 320px;
+  height: 448px;
+}

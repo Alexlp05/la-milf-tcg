@@ -1,49 +1,469 @@
+/* ==========================================
+   LA MILF TCG — Global Design System
+   Style: Élégant, sobre-luxueux, cartoon épique
+   ========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
+/* ==========================================
+   CSS CUSTOM PROPERTIES (Design Tokens)
+   ========================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* --- Color Palette: Warm luxury with subtle gold --- */
+  --color-bg-primary: #f8f6f2;
+  --color-bg-secondary: #f0ece4;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #fffdf9;
+  --color-bg-overlay: rgba(30, 25, 20, 0.6);
+
+  /* --- Text --- */
+  --color-text-primary: #1a1612;
+  --color-text-secondary: #6b5e52;
+  --color-text-muted: #9c8e80;
+  --color-text-inverse: #faf8f5;
+
+  /* --- Accent colors --- */
+  --color-accent-gold: #c9a84c;
+  --color-accent-gold-light: #e8d48b;
+  --color-accent-gold-dark: #8b7634;
+  --color-accent-purple: #7c5cbf;
+  --color-accent-purple-light: #a78bdb;
+  --color-accent-crimson: #c44545;
+  --color-accent-teal: #3d9e8f;
+
+  /* --- Rarity Colors --- */
+  --rarity-commune: #8c8c8c;
+  --rarity-peu-commune: #4a9e6b;
+  --rarity-rare: #4a7cc9;
+  --rarity-ultra-rare: #9b59b6;
+  --rarity-shiny: linear-gradient(135deg, #e8d48b 0%, #c9a84c 30%, #f5e6a3 50%, #c9a84c 70%, #a88932 100%);
+  --rarity-gold: linear-gradient(135deg, #ffd700 0%, #ffb800 25%, #fff4b0 50%, #ffc800 75%, #daa520 100%);
+
+  /* --- Rarity Glow --- */
+  --glow-commune: 0 0 0 transparent;
+  --glow-peu-commune: 0 0 12px rgba(74, 158, 107, 0.3);
+  --glow-rare: 0 0 16px rgba(74, 124, 201, 0.4);
+  --glow-ultra-rare: 0 0 20px rgba(155, 89, 182, 0.5);
+  --glow-shiny: 0 0 24px rgba(201, 168, 76, 0.6), 0 0 48px rgba(201, 168, 76, 0.2);
+  --glow-gold: 0 0 30px rgba(255, 215, 0, 0.7), 0 0 60px rgba(255, 215, 0, 0.3);
+
+  /* --- Typography --- */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* --- Spacing Scale --- */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* --- Border Radius --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* --- Shadows --- */
+  --shadow-sm: 0 1px 3px rgba(26, 22, 18, 0.06);
+  --shadow-md: 0 4px 12px rgba(26, 22, 18, 0.08);
+  --shadow-lg: 0 8px 30px rgba(26, 22, 18, 0.12);
+  --shadow-xl: 0 16px 50px rgba(26, 22, 18, 0.16);
+  --shadow-card: 0 2px 8px rgba(26, 22, 18, 0.06), 0 8px 24px rgba(26, 22, 18, 0.1);
+
+  /* --- Transitions --- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Z-Index Scale --- */
+  --z-base: 1;
+  --z-card: 10;
+  --z-overlay: 100;
+  --z-modal: 200;
+  --z-toast: 300;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ==========================================
+   RESET & BASE STYLES
+   ========================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html {
-  height: 100%;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
-html,
 body {
-  max-width: 100vw;
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
   overflow-x: hidden;
 }
 
+/* Mobile-first: prevent overscroll bounce on iOS */
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+img {
+  max-width: 100%;
+  display: block;
 }
 
 a {
-  color: inherit;
+  color: var(--color-accent-gold-dark);
   text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+a:hover {
+  color: var(--color-accent-gold);
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: inherit;
+}
+
+/* ==========================================
+   TYPOGRAPHY
+   ========================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); }
+h2 { font-size: clamp(1.375rem, 4vw, 2rem); }
+h3 { font-size: clamp(1.125rem, 3vw, 1.5rem); }
+
+/* ==========================================
+   UTILITY CLASSES
+   ========================================== */
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 1024px;
+    padding: 0 var(--space-xl);
   }
+}
+
+/* ==========================================
+   BUTTONS
+   ========================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn:hover::after {
+  opacity: 1;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, var(--color-accent-gold-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(201, 168, 76, 0.35);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(201, 168, 76, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  border: 1.5px solid rgba(201, 168, 76, 0.3);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-accent-gold);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, var(--color-accent-crimson) 0%, #a33030 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(196, 69, 69, 0.3);
+}
+
+.btn-lg {
+  padding: var(--space-md) var(--space-xl);
+  font-size: 1.1rem;
+  border-radius: var(--radius-lg);
+}
+
+.btn-sm {
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.85rem;
+}
+
+/* ==========================================
+   CARDS (UI Cards, not TCG cards)
+   ========================================== */
+.surface {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(201, 168, 76, 0.08);
+}
+
+.surface-elevated {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(201, 168, 76, 0.12);
+}
+
+/* ==========================================
+   BADGE / TAG
+   ========================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-commune { background: #e8e8e8; color: #555; }
+.badge-peu-commune { background: #d4f0df; color: #2d6b45; }
+.badge-rare { background: #d4e5f7; color: #2d5a8b; }
+.badge-ultra-rare { background: #e8d8f4; color: #6b3d8f; }
+.badge-shiny { background: linear-gradient(135deg, #fff7d4, #f5e6a3); color: #8b7634; border: 1px solid rgba(201, 168, 76, 0.3); }
+.badge-gold { background: linear-gradient(135deg, #fff4b0, #ffd700); color: #7a5c00; border: 1px solid rgba(218, 165, 32, 0.4); }
+
+/* ==========================================
+   FORM ELEMENTS
+   ========================================== */
+.input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid rgba(26, 22, 18, 0.12);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(201, 168, 76, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(201, 168, 76, 0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes cardFlip {
+  0% { transform: perspective(800px) rotateY(0deg); }
+  100% { transform: perspective(800px) rotateY(180deg); }
+}
+
+@keyframes revealFlash {
+  0% { opacity: 0; filter: brightness(3) saturate(0); }
+  40% { opacity: 1; filter: brightness(2) saturate(0.5); }
+  100% { opacity: 1; filter: brightness(1) saturate(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-slow) ease forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-slow) ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-spring) forwards;
+}
+
+/* ==========================================
+   LOADING SPINNER
+   ========================================== */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(201, 168, 76, 0.2);
+  border-top-color: var(--color-accent-gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================
+   TOAST / NOTIFICATION
+   ========================================== */
+.toast {
+  position: fixed;
+  bottom: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-toast);
+  animation: fadeInUp var(--transition-base) ease;
+}
+
+/* ==========================================
+   OVERLAY / MODAL
+   ========================================== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg-overlay);
+  backdrop-filter: blur(8px);
+  z-index: var(--z-overlay);
+  animation: fadeIn var(--transition-fast) ease;
+}
+
+/* ==========================================
+   RESPONSIVE HELPERS
+   ========================================== */
+.mobile-only {
+  display: block;
+}
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only { display: none; }
+  .desktop-only { display: block; }
+}
+
+/* ==========================================
+   SCROLLBAR STYLING
+   ========================================== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.25);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 76, 0.45);
 }

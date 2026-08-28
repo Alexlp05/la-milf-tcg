@@ -1,0 +1,228 @@
+.adminPage {
+  min-height: 100dvh;
+  padding-bottom: 80px;
+  background: var(--color-bg-primary);
+}
+
+.header {
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(26, 22, 18, 0.1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-card);
+}
+
+.headerTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.adminBadge {
+  background: var(--color-accent-crimson);
+  color: white;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.content {
+  padding: var(--space-lg);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  border-bottom: 2px solid rgba(26, 22, 18, 0.05);
+}
+
+.tab {
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--color-text-primary);
+}
+
+.tab.active {
+  color: var(--color-accent-gold-dark);
+  border-bottom-color: var(--color-accent-gold-dark);
+}
+
+/* Tables */
+.tableContainer {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(26, 22, 18, 0.08);
+  overflow: hidden;
+  margin-bottom: var(--space-xl);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  background: rgba(26, 22, 18, 0.02);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid rgba(26, 22, 18, 0.08);
+}
+
+.table td {
+  padding: var(--space-md);
+  border-bottom: 1px solid rgba(26, 22, 18, 0.04);
+  font-size: 0.9rem;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+/* User Info */
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: block;
+}
+
+.userEmail {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.statusPending {
+  background: #fff4b0;
+  color: #7a5c00;
+}
+
+.statusApproved {
+  background: #d4f0df;
+  color: #2d6b45;
+}
+
+.statusBanned {
+  background: #fde8e8;
+  color: #c44545;
+}
+
+/* Actions */
+.actionGroup {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.actionBtn {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.approveBtn {
+  background: #e8f5ed;
+  color: #2d6b45;
+  border-color: #d4f0df;
+}
+
+.approveBtn:hover {
+  background: #d4f0df;
+}
+
+.banBtn {
+  background: #fde8e8;
+  color: #c44545;
+  border-color: #fbd5d5;
+}
+
+.banBtn:hover {
+  background: #fbd5d5;
+}
+
+.sendPackBtn {
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, var(--color-accent-gold-dark) 100%);
+  color: white;
+}
+
+.sendPackBtn:hover {
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.4);
+}
+
+/* Global Actions */
+.globalActions {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  margin-bottom: var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.globalActionsText h3 {
+  margin-bottom: 4px;
+}
+
+.globalActionsText p {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}

@@ -1,0 +1,242 @@
+.loginPage {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative background pattern */
+.loginPage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(201, 168, 76, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(124, 92, 191, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(201, 168, 76, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Floating card silhouettes in background */
+.loginPage::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 280px;
+  border: 2px solid rgba(201, 168, 76, 0.06);
+  border-radius: 12px;
+  top: 15%;
+  right: -40px;
+  transform: rotate(15deg);
+  pointer-events: none;
+  animation: float 6s ease-in-out infinite;
+}
+
+.loginCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-2xl);
+  text-align: center;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Logo / Brand */
+.brand {
+  margin-bottom: var(--space-2xl);
+}
+
+.logoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, var(--color-accent-gold-dark) 100%);
+  box-shadow: 0 8px 30px rgba(201, 168, 76, 0.35);
+  margin-bottom: var(--space-lg);
+  font-size: 2rem;
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.brandName span {
+  background: linear-gradient(135deg, var(--color-accent-gold), var(--color-accent-gold-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brandTagline {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin: var(--space-xl) 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.2), transparent);
+}
+
+/* Google Button */
+.googleBtn {
+  width: 100%;
+  padding: 14px var(--space-lg);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  border: 1.5px solid rgba(26, 22, 18, 0.1);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.googleBtn:hover {
+  border-color: var(--color-accent-gold);
+  box-shadow: var(--shadow-lg), 0 0 0 3px rgba(201, 168, 76, 0.1);
+  transform: translateY(-2px);
+}
+
+.googleBtn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.googleIcon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Info text */
+.infoText {
+  margin-top: var(--space-xl);
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.infoText strong {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+/* Pending state */
+.pendingCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-2xl);
+  text-align: center;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.pendingIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.15), rgba(201, 168, 76, 0.05));
+  margin-bottom: var(--space-lg);
+  font-size: 1.8rem;
+  animation: float 4s ease-in-out infinite;
+}
+
+.pendingTitle {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.pendingText {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: var(--space-xl);
+}
+
+.signOutLink {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.signOutLink:hover {
+  color: var(--color-accent-crimson);
+}
+
+/* Decorative card shapes */
+.floatingCard {
+  position: absolute;
+  border: 2px solid rgba(201, 168, 76, 0.06);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.floatingCard1 {
+  width: 120px;
+  height: 168px;
+  top: 10%;
+  left: -30px;
+  transform: rotate(-12deg);
+  animation: float 7s ease-in-out infinite;
+}
+
+.floatingCard2 {
+  width: 90px;
+  height: 126px;
+  bottom: 15%;
+  left: 10%;
+  transform: rotate(8deg);
+  animation: float 5s ease-in-out infinite 1s;
+}
+
+.floatingCard3 {
+  width: 100px;
+  height: 140px;
+  bottom: 20%;
+  right: -20px;
+  transform: rotate(-6deg);
+  animation: float 6s ease-in-out infinite 2s;
+}
