@@ -92,8 +92,7 @@ const CARDS_DATA = [
 // Scarcity limits per rarity tier (applied to all cards)
 const SCARCITY_CONFIG: { rarity: Rarity; maxSupply: number | null }[] = [
   { rarity: Rarity.COMMUNE, maxSupply: null },       // unlimited
-  { rarity: Rarity.PEU_COMMUNE, maxSupply: null },    // unlimited
-  { rarity: Rarity.RARE, maxSupply: null },            // unlimited
+  { rarity: Rarity.RARE, maxSupply: null },           // unlimited
   { rarity: Rarity.ULTRA_RARE, maxSupply: 20 },
   { rarity: Rarity.SHINY, maxSupply: 3 },
   { rarity: Rarity.GOLD, maxSupply: 1 },
@@ -104,8 +103,7 @@ const GAME_CONFIG = [
   {
     key: 'SLOT_1_2_WEIGHTS',
     value: JSON.stringify({
-      COMMUNE: 75,
-      PEU_COMMUNE: 25,
+      COMMUNE: 100,
     }),
   },
   {
@@ -121,7 +119,6 @@ const GAME_CONFIG = [
     key: 'DUST_VALUES',
     value: JSON.stringify({
       COMMUNE: 5,
-      PEU_COMMUNE: 10,
       RARE: 25,
       ULTRA_RARE: 100,
       SHINY: 250,

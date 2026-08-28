@@ -95,7 +95,6 @@
 }
 
 .frameCommune { border-color: #8c8c8c; }
-.framePeuCommune { border-color: #4a9e6b; }
 .frameRare { border-color: #4a7cc9; }
 
 .frameUltraRare {
@@ -180,7 +179,6 @@
 }
 
 .scoreCommune { background: #e8e8e8; color: #555; }
-.scorePeuCommune { background: #d4f0df; color: #2d6b45; }
 .scoreRare { background: #d4e5f7; color: #2d5a8b; }
 .scoreUltraRare { background: #e8d8f4; color: #6b3d8f; }
 .scoreShiny { 

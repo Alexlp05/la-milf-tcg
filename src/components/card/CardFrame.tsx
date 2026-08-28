@@ -3,7 +3,7 @@
 import React from 'react';
 import styles from './CardFrame.module.css';
 
-export type CardRarity = 'COMMUNE' | 'PEU_COMMUNE' | 'RARE' | 'ULTRA_RARE' | 'SHINY' | 'GOLD';
+export type CardRarity = 'COMMUNE' | 'RARE' | 'ULTRA_RARE' | 'SHINY' | 'GOLD';
 export type CardType = 'PERSONNAGE' | 'SOUVENIR' | 'LIEU' | 'OBJET' | 'REFERENCE';
 export type RevealPhase = 'NONE' | 'A' | 'B' | 'C';
 export type CardSize = 'small' | 'normal' | 'large';
@@ -46,7 +46,6 @@ export default function CardFrame({
   const getRarityClass = (prefix: string) => {
     switch (rarity) {
       case 'COMMUNE': return styles[`${prefix}Commune`];
-      case 'PEU_COMMUNE': return styles[`${prefix}PeuCommune`];
       case 'RARE': return styles[`${prefix}Rare`];
       case 'ULTRA_RARE': return styles[`${prefix}UltraRare`];
       case 'SHINY': return styles[`${prefix}Shiny`];

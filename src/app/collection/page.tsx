@@ -51,12 +51,14 @@ const MOCK_COLLECTION: { instanceId: string; card: CardData; rarity: CardRarity;
       actionValue: 25,
       loreAlbum: "La gifle amicale est un rituel sacré. La recevoir, c'est être accepté.",
     },
-    rarity: 'PEU_COMMUNE',
+    rarity: 'COMMUNE',
     quantity: 2,
   },
 ];
 
 type FilterType = 'ALL' | CardType | CardRarity;
+
+const RARITY_FILTERS: CardRarity[] = ['COMMUNE', 'RARE', 'ULTRA_RARE', 'SHINY', 'GOLD'];
 
 export default function CollectionPage() {
   const router = useRouter();
@@ -107,12 +109,15 @@ export default function CollectionPage() {
           >
             Lieux
           </button>
-          <button 
-            className={`${styles.filterBtn} ${activeFilter === 'SHINY' ? styles.active : ''}`}
-            onClick={() => setActiveFilter('SHINY')}
-          >
-            ✨ Brillant
-          </button>
+          {RARITY_FILTERS.map((rarity) => (
+            <button
+              key={rarity}
+              className={`${styles.filterBtn} ${activeFilter === rarity ? styles.active : ''}`}
+              onClick={() => setActiveFilter(rarity)}
+            >
+              {rarity === 'SHINY' ? '✨' : ''} {rarity}
+            </button>
+          ))}
         </div>
 
         {/* Grid */}

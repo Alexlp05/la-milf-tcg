@@ -29,7 +29,7 @@ const MOCK_PULLS: { card: CardData; rarity: CardRarity; mintNumber?: number; max
       actionDescription: "Inflige 25 dégâts d'amitié à un allié.",
       actionValue: 25,
     },
-    rarity: 'PEU_COMMUNE',
+    rarity: 'COMMUNE',
   },
   {
     card: {
