@@ -1,26 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import styles from './admin.module.css';
 
-// Mock data for MVP
-const MOCK_USERS = [
-  { id: '1', name: 'Maxime', email: 'maxime@example.com', status: 'PENDING', role: 'PLAYER', dust: 0, packs: 0 },
-  { id: '2', name: 'Ludo', email: 'ludo@example.com', status: 'APPROVED', role: 'PLAYER', dust: 150, packs: 2 },
-  { id: '3', name: 'Admin', email: 'admin@lamilf.com', status: 'APPROVED', role: 'ADMIN', dust: 9999, packs: 50 },
-  { id: '4', name: 'Kévin', email: 'kevin@example.com', status: 'BANNED', role: 'PLAYER', dust: 0, packs: 0 },
-];
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  status: 'PENDING' | 'APPROVED' | 'BANNED';
+  role: 'PLAYER' | 'ADMIN';
+  dustBalance: number;
+  _count: { cards: number; boosters: number };
+  createdAt: string;
+  approvedAt: string | null;
+}
 
 export default function AdminPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<'users' | 'cards'>('users');
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [sendPack, setSendPack] = useState<{ userId: string | 'all'; type: 'STANDARD' | 'PREMIUM' | 'WELCOME'; count: number } | null>(null);
 
-  // Auth protection (in a real app, this is also checked on the server)
-  if (status === 'loading') return <div className="spinner" style={{margin: '100px auto'}}/>;
+  // Auth protection
+  if (status === 'loading') return <div className={styles.loading}>Chargement...</div>;
   
   if (!session || session.user.role !== 'ADMIN') {
     return (
@@ -34,30 +41,96 @@ export default function AdminPage() {
     );
   }
 
-  const handleApprove = (userId: string) => {
-    setUsers(users.map(u => u.id === userId ? { ...u, status: 'APPROVED' } : u));
-    alert(`Utilisateur approuvé. Dans la version finale, il recevra automatiquement 3 boosters.`);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (res.ok) setUsers(data.users || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleBan = (userId: string) => {
-    setUsers(users.map(u => u.id === userId ? { ...u, status: 'BANNED' } : u));
+  const handleUserAction = async (userId: string, action: 'approve' | 'ban' | 'unban') => {
+    setActionLoading(userId);
+    try {
+      const updates: { status?: string; role?: string } = {};
+      if (action === 'approve') updates.status = 'APPROVED';
+      if (action === 'ban') updates.status = 'BANNED';
+      if (action === 'unban') updates.status = 'APPROVED';
+
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, ...updates }),
+      });
+
+      if (!res.ok) throw new Error('Erreur');
+      await fetchUsers();
+    } catch (e) {
+      alert('Erreur lors de la mise à jour');
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleSendPack = (userId: string) => {
-    setUsers(users.map(u => u.id === userId ? { ...u, packs: u.packs + 1 } : u));
-    alert("1 Booster envoyé !");
+  const handleSendPack = async (userId: string | 'all') => {
+    if (!sendPack) return;
+    setActionLoading('sendpack');
+    try {
+      const res = await fetch('/api/admin/boosters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId === 'all' ? undefined : userId,
+          allUsers: userId === 'all',
+          packType: sendPack.type,
+          count: sendPack.count,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erreur');
+      }
+      await fetchUsers();
+      setSendPack(null);
+      alert(`${sendPack.count} booster(s) ${sendPack.type} envoyé(s) !`);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleSendToAll = () => {
-    setUsers(users.map(u => u.status === 'APPROVED' ? { ...u, packs: u.packs + 1 } : u));
-    alert("1 Booster envoyé à tous les joueurs approuvés !");
+  const openSendPackModal = (userId: string | 'all') => {
+    setSendPack({ userId, type: 'STANDARD', count: 1 });
+  };
+
+  const statusLabels: Record<string, string> = {
+    PENDING: 'En attente',
+    APPROVED: 'Approuvé',
+    BANNED: 'Banni',
+  };
+
+  const statusStyles: Record<string, string> = {
+    PENDING: styles.statusPending,
+    APPROVED: styles.statusApproved,
+    BANNED: styles.statusBanned,
   };
 
   return (
     <main className={styles.adminPage}>
       {/* Header */}
       <header className={styles.header}>
-        <button className="btn" onClick={() => router.push('/')} style={{padding: '8px', border: '1px solid #ddd'}}>
+        <button className={styles.backBtn} onClick={() => router.push('/')}>
           ← Retour
         </button>
         <h1 className={styles.headerTitle}>Administration</h1>
@@ -83,87 +156,148 @@ export default function AdminPage() {
 
         {activeTab === 'users' && (
           <>
+            {/* Send Pack Modal */}
+            {sendPack && (
+              <div className={styles.modalOverlay} onClick={() => setSendPack(null)}>
+                <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+                  <h3>{sendPack.userId === 'all' ? 'Envoyer à tous' : 'Envoyer un booster'}</h3>
+                  <div className={styles.modalField}>
+                    <label>Type</label>
+                    <select
+                      value={sendPack.type}
+                      onChange={e => setSendPack({ ...sendPack, type: e.target.value as any })}
+                    >
+                      <option value="STANDARD">Standard</option>
+                      <option value="PREMIUM">Premium</option>
+                      <option value="WELCOME">Bienvenue</option>
+                    </select>
+                  </div>
+                  <div className={styles.modalField}>
+                    <label>Quantité</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={sendPack.count}
+                      onChange={e => setSendPack({ ...sendPack, count: parseInt(e.target.value) })}
+                    />
+                  </div>
+                  <div className={styles.modalActions}>
+                    <button className={styles.cancelBtn} onClick={() => setSendPack(null)}>Annuler</button>
+                    <button 
+                      className={`${styles.confirmBtn} ${actionLoading === 'sendpack' ? styles.loading : ''}`}
+                      onClick={() => handleSendPack(sendPack.userId)}
+                      disabled={actionLoading === 'sendpack'}
+                    >
+                      {actionLoading === 'sendpack' ? 'Envoi...' : `Envoyer ${sendPack.count} booster(s)`}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className={styles.globalActions}>
               <div className={styles.globalActionsText}>
                 <h3>Cadeau Global</h3>
-                <p>Offrir 1 booster à tous les joueurs approuvés (pour célébrer un event par ex.)</p>
+                <p>Offrir des boosters à tous les joueurs approuvés</p>
               </div>
-              <button className={`${styles.actionBtn} ${styles.sendPackBtn}`} onClick={handleSendToAll}>
+              <button className={`${styles.actionBtn} ${styles.sendPackBtn}`} onClick={() => openSendPackModal('all')}>
                 🎁 Envoyer à tous
               </button>
             </div>
 
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Joueur</th>
-                    <th>Statut</th>
-                    <th>Ressources</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(user => (
-                    <tr key={user.id}>
-                      <td>
-                        <div className={styles.userCell}>
-                          <div className={styles.userAvatar}>{user.name.charAt(0)}</div>
-                          <div>
-                            <span className={styles.userName}>
-                              {user.name} {user.role === 'ADMIN' && '👑'}
-                            </span>
-                            <span className={styles.userEmail}>{user.email}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${
-                          user.status === 'PENDING' ? styles.statusPending : 
-                          user.status === 'APPROVED' ? styles.statusApproved : 
-                          styles.statusBanned
-                        }`}>
-                          {user.status === 'PENDING' ? 'En attente' :
-                           user.status === 'APPROVED' ? 'Approuvé' : 'Banni'}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{fontSize: '0.85rem'}}>
-                          <div>📦 {user.packs} Boosters</div>
-                          <div style={{color: 'var(--color-accent-gold-dark)'}}>✨ {user.dust} Poussière</div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className={styles.actionGroup}>
-                          {user.status === 'PENDING' && (
-                            <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={() => handleApprove(user.id)}>
-                              ✓ Approuver
-                            </button>
-                          )}
-                          
-                          {user.status === 'APPROVED' && user.role !== 'ADMIN' && (
-                            <>
-                              <button className={`${styles.actionBtn} ${styles.sendPackBtn}`} onClick={() => handleSendPack(user.id)}>
-                                +1 Pack
-                              </button>
-                              <button className={`${styles.actionBtn} ${styles.banBtn}`} onClick={() => handleBan(user.id)}>
-                                Bannir
-                              </button>
-                            </>
-                          )}
-                          
-                          {user.status === 'BANNED' && (
-                            <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={() => handleApprove(user.id)}>
-                              Débannir
-                            </button>
-                          )}
-                        </div>
-                      </td>
+            {loading ? (
+              <div className={styles.loading}>Chargement des joueurs...</div>
+            ) : (
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Joueur</th>
+                      <th>Statut</th>
+                      <th>Ressources</th>
+                      <th>Inscrit le</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {users.map(user => (
+                      <tr key={user.id}>
+                        <td>
+                          <div className={styles.userCell}>
+                            <div className={styles.userAvatar}>{user.name.charAt(0)}</div>
+                            <div>
+                              <span className={styles.userName}>
+                                {user.name} {user.role === 'ADMIN' && '👑'}
+                              </span>
+                              <span className={styles.userEmail}>{user.email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${statusStyles[user.status]}`}>
+                            {statusLabels[user.status]}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{fontSize: '0.85rem'}}>
+                            <div>📦 {user._count.boosters} Boosters</div>
+                            <div style={{color: 'var(--color-accent-gold-dark)'}}>✨ {user.dustBalance} Poussière</div>
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{fontSize: '0.8rem', color: 'var(--color-text-muted)'}}>
+                            {new Date(user.createdAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        </td>
+                        <td>
+                          <div className={styles.actionGroup}>
+                            {user.status === 'PENDING' && (
+                              <button 
+                                className={`${styles.actionBtn} ${styles.approveBtn}`}
+                                onClick={() => handleUserAction(user.id, 'approve')}
+                                disabled={actionLoading === user.id}
+                              >
+                                {actionLoading === user.id ? '...' : '✓ Approuver'}
+                              </button>
+                            )}
+                            
+                            {user.status === 'APPROVED' && user.role !== 'ADMIN' && (
+                              <>
+                                <button 
+                                  className={`${styles.actionBtn} ${styles.sendPackBtn}`}
+                                  onClick={() => openSendPackModal(user.id)}
+                                  disabled={actionLoading === user.id}
+                                >
+                                  +1 Pack
+                                </button>
+                                <button 
+                                  className={`${styles.actionBtn} ${styles.banBtn}`}
+                                  onClick={() => handleUserAction(user.id, 'ban')}
+                                  disabled={actionLoading === user.id}
+                                >
+                                  Bannir
+                                </button>
+                              </>
+                            )}
+                            
+                            {user.status === 'BANNED' && (
+                              <button 
+                                className={`${styles.actionBtn} ${styles.approveBtn}`}
+                                onClick={() => handleUserAction(user.id, 'unban')}
+                                disabled={actionLoading === user.id}
+                              >
+                                Débannir
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </>
         )}
 

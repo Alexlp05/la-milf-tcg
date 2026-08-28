@@ -97,6 +97,25 @@ async function claimCard(cardId: string, rarity: Rarity, userId: string) {
   });
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
+
+    const packs = await prisma.boosterPack.findMany({
+      where: { ownerId: session.user.id, status: 'UNOPENED' },
+      select: { id: true, packType: true, grantedAt: true },
+      orderBy: { grantedAt: 'desc' },
+    });
+
+    return NextResponse.json({ packs });
+  } catch (e: any) {
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

@@ -5,82 +5,95 @@ import { useRouter } from 'next/navigation';
 import styles from './open-pack.module.css';
 import CardFrame, { CardData, CardRarity, RevealPhase } from '@/components/card/CardFrame';
 
-// Mock data for MVP test before backend integration
-const MOCK_PULLS: { card: CardData; rarity: CardRarity; mintNumber?: number; maxMint?: number }[] = [
-  {
-    card: {
-      id: 'card_002',
-      name: 'Le Kebab du Dimanche',
-      title: 'Repas des Champions',
-      type: 'OBJET',
-      overallScore: 72,
-      actionDescription: 'Restaure 30 points de dignité après une soirée.',
-      actionValue: 30,
-    },
-    rarity: 'COMMUNE',
-  },
-  {
-    card: {
-      id: 'card_004',
-      name: 'La Gifle Amicale',
-      title: 'Tradition Ancestrale',
-      type: 'SOUVENIR',
-      overallScore: 88,
-      actionDescription: "Inflige 25 dégâts d'amitié à un allié.",
-      actionValue: 25,
-    },
-    rarity: 'COMMUNE',
-  },
-  {
-    card: {
-      id: 'card_001',
-      name: 'T-Max',
-      title: 'Le bouffeur de fumigène',
-      type: 'PERSONNAGE',
-      overallScore: 94,
-      actionDescription: 'Écarte les bras dans la passion.',
-      actionValue: 15,
-    },
-    rarity: 'SHINY',
-    mintNumber: 2,
-    maxMint: 3,
-  },
-];
+interface PulledCard {
+  instanceId: string;
+  card: CardData & { loreAlbum: string };
+  rarity: CardRarity;
+  mintNumber?: number;
+  maxMint?: number;
+  dustValue: number;
+}
 
-type PackState = 'UNOPENED' | 'TEARING' | 'DISTRIBUTED' | 'REVEALING' | 'FINISHED';
+interface BoosterPack {
+  id: string;
+  packType: 'STANDARD' | 'PREMIUM' | 'WELCOME';
+}
+
+type PackState = 'SELECTING' | 'TEARING' | 'DISTRIBUTED' | 'REVEALING' | 'FINISHED';
 
 export default function OpenPackPage() {
   const router = useRouter();
-  const [packState, setPackState] = useState<PackState>('UNOPENED');
-  
+  const [packState, setPackState] = useState<PackState>('SELECTING');
+  const [packs, setPacks] = useState<BoosterPack[]>([]);
+  const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   // Track state for each of the 3 cards
+  const [pulledCards, setPulledCards] = useState<PulledCard[]>([]);
   const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false]);
   const [revealPhases, setRevealPhases] = useState<RevealPhase[]>(['NONE', 'NONE', 'NONE']);
-  
-  // Which card is currently being revealed (0, 1, or 2)
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
 
-  const handleOpenPack = () => {
-    if (packState !== 'UNOPENED') return;
+  // Fetch user's unopened packs on mount
+  useEffect(() => {
+    fetch('/api/boosters/open', { method: 'GET' }) // We'll add a GET endpoint or fetch from a different endpoint
+      .then(res => res.json())
+      .then(data => {
+        if (data.packs) setPacks(data.packs);
+      })
+      .catch(() => {});
+  }, []);
+
+  // For now, let's fetch from a simple endpoint or use a different approach
+  useEffect(() => {
+    // We'll add a GET to /api/boosters/open to list packs
+    fetch('/api/boosters/open?list=true')
+      .then(res => res.json())
+      .then(data => setPacks(data.packs || []))
+      .catch(() => setPacks([]));
+  }, []);
+
+  const handleOpenPack = async () => {
+    if (!selectedPackId || packState !== 'SELECTING') return;
     
+    setLoading(true);
+    setError(null);
     setPackState('TEARING');
-    
-    // Simulate API call and pack tear animation
-    setTimeout(() => {
-      setPackState('DISTRIBUTED');
-    }, 1500);
+
+    try {
+      const res = await fetch('/api/boosters/open', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packId: selectedPackId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de l\'ouverture');
+
+      setPulledCards(data.cards);
+      setFlippedCards([false, false, false]);
+      setRevealPhases(['NONE', 'NONE', 'NONE']);
+      setActiveCardIndex(null);
+      
+      // Wait for tear animation then show cards
+      setTimeout(() => setPackState('DISTRIBUTED'), 1500);
+    } catch (e: any) {
+      setError(e.message);
+      setPackState('SELECTING');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCardClick = (index: number) => {
     if (packState !== 'DISTRIBUTED' && packState !== 'REVEALING') return;
     
-    // Can't click if another card is currently in its sequential reveal process
     if (activeCardIndex !== null && activeCardIndex !== index && revealPhases[activeCardIndex] !== 'C') {
       return;
     }
 
     if (!flippedCards[index]) {
-      // First click: flip the card and start Phase A (Frame + Name)
       const newFlipped = [...flippedCards];
       newFlipped[index] = true;
       setFlippedCards(newFlipped);
@@ -101,22 +114,24 @@ export default function OpenPackPage() {
     const newPhases = [...revealPhases];
     
     if (currentPhase === 'A') {
-      // Move to Phase B (Stats + Action)
       newPhases[activeCardIndex] = 'B';
       setRevealPhases(newPhases);
     } else if (currentPhase === 'B') {
-      // Move to Phase C (Artwork flash climax)
       newPhases[activeCardIndex] = 'C';
       setRevealPhases(newPhases);
       
-      // Check if all cards are fully revealed
       if (newPhases.every(p => p === 'C')) {
         setTimeout(() => setPackState('FINISHED'), 1000);
       } else {
-        // Reset active index so user can click the next card
         setActiveCardIndex(null);
       }
     }
+  };
+
+  const packTypeLabels: Record<string, string> = {
+    STANDARD: 'Standard',
+    PREMIUM: 'Premium',
+    WELCOME: 'Bienvenue',
   };
 
   return (
@@ -133,16 +148,54 @@ export default function OpenPackPage() {
       <div className={styles.stage}>
         <div className={styles.spotlight} />
 
-        {/* State 1: The Pack */}
-        {(packState === 'UNOPENED' || packState === 'TEARING') && (
-          <div 
-            className={`${styles.packContainer} ${packState === 'TEARING' ? styles.packTearing : ''}`}
-            onClick={handleOpenPack}
-          >
+        {/* State: Select Pack */}
+        {packState === 'SELECTING' && (
+          <div className={styles.packSelection}>
+            <h2 className={styles.selectionTitle}>Choisis ton booster</h2>
+            {error && <div className={styles.error}>{error}</div>}
+            {packs.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>Aucun booster disponible.</p>
+                <p className={styles.emptySub}>Les admins peuvent t'en donner via le panel d'administration.</p>
+              </div>
+            ) : (
+              <div className={styles.packList}>
+                {packs.map(pack => (
+                  <button
+                    key={pack.id}
+                    className={`${styles.packOption} ${selectedPackId === pack.id ? styles.selected : ''}`}
+                    onClick={() => setSelectedPackId(pack.id)}
+                    disabled={loading}
+                  >
+                    <div className={styles.optionIcon}>🃏</div>
+                    <div className={styles.optionInfo}>
+                      <div className={styles.optionTitle}>{packTypeLabels[pack.packType]}</div>
+                      <div className={styles.optionId}>#{pack.id.slice(0, 8)}...</div>
+                    </div>
+                    {selectedPackId === pack.id && <div className={styles.checkmark}>✓</div>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedPackId && (
+              <button 
+                className={`${styles.openBtn} ${loading ? styles.loading : ''}`}
+                onClick={handleOpenPack}
+                disabled={loading}
+              >
+                {loading ? 'Ouverture...' : 'Ouvrir ce booster'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* State 1: The Pack Tearing */}
+        {(packState === 'TEARING') && (
+          <div className={`${styles.packContainer} ${styles.packTearing}`}>
             <div className={styles.boosterPack}>
               <div className={styles.packLogo}>🃏</div>
               <div className={styles.packTitle}>Standard</div>
-              <div className={styles.packInstruction}>Toucher pour ouvrir</div>
+              <div className={styles.packInstruction}>Ouverture en cours...</div>
             </div>
           </div>
         )}
@@ -150,13 +203,12 @@ export default function OpenPackPage() {
         {/* State 2 & 3: Distributed Cards & Revealing */}
         {(packState === 'DISTRIBUTED' || packState === 'REVEALING' || packState === 'FINISHED') && (
           <div className={styles.cardsContainer}>
-            {MOCK_PULLS.map((pull, i) => (
-<div 
-                  key={i} 
-                  className={`${styles.cardSlot} ${styles.visible}`}
-                  style={{
+            {pulledCards.map((pull, i) => (
+              <div 
+                key={pull.instanceId} 
+                className={`${styles.cardSlot} ${styles.visible}`}
+                style={{
                   zIndex: activeCardIndex === i ? 50 : 1,
-                  // Bring the active card forward and dim the others
                   transform: activeCardIndex === i ? 'scale(1.1) translateY(-20px)' : '',
                   opacity: (activeCardIndex !== null && activeCardIndex !== i && revealPhases[activeCardIndex] !== 'C') ? 0.4 : 1,
                   transition: 'all 0.4s ease'

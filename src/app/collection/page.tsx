@@ -1,60 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './collection.module.css';
 import CardFrame, { CardData, CardRarity, CardType } from '@/components/card/CardFrame';
 
-// Mock data for MVP
-const MOCK_COLLECTION: { instanceId: string; card: CardData; rarity: CardRarity; mintNumber?: number; maxMint?: number; quantity: number }[] = [
-  {
-    instanceId: 'inst_1',
-    card: {
-      id: 'card_001',
-      name: 'T-Max',
-      title: 'Le bouffeur de fumigène',
-      type: 'PERSONNAGE',
-      overallScore: 94,
-      actionDescription: 'Écarte les bras dans la passion.',
-      actionValue: 15,
-      loreAlbum: "Les savants disent qu'il n'existe pas meilleur crâne rasé que celui de Ludo.",
-    },
-    rarity: 'SHINY',
-    mintNumber: 2,
-    maxMint: 3,
-    quantity: 1,
-  },
-  {
-    instanceId: 'inst_2',
-    card: {
-      id: 'card_002',
-      name: 'Le Kebab du Dimanche',
-      title: 'Repas des Champions',
-      type: 'OBJET',
-      overallScore: 72,
-      actionDescription: 'Restaure 30 points de dignité.',
-      actionValue: 30,
-      loreAlbum: "Certains disent que ce kebab a sauvé plus de vies que la Croix-Rouge.",
-    },
-    rarity: 'COMMUNE',
-    quantity: 4,
-  },
-  {
-    instanceId: 'inst_3',
-    card: {
-      id: 'card_004',
-      name: 'La Gifle Amicale',
-      title: 'Tradition Ancestrale',
-      type: 'SOUVENIR',
-      overallScore: 88,
-      actionDescription: "Inflige 25 dégâts d'amitié.",
-      actionValue: 25,
-      loreAlbum: "La gifle amicale est un rituel sacré. La recevoir, c'est être accepté.",
-    },
-    rarity: 'COMMUNE',
-    quantity: 2,
-  },
-];
+interface CollectionItem {
+  card: CardData & { loreAlbum: string };
+  rarity: CardRarity;
+  mintNumber: number | null;
+  maxMint: number | null;
+  quantity: number;
+  instances: string[];
+  dustValue: number;
+}
+
+interface CollectionResponse {
+  collection: CollectionItem[];
+  stats: {
+    totalCards: number;
+    uniqueCards: number;
+    byRarity: Record<string, number>;
+  };
+}
 
 type FilterType = 'ALL' | CardType | CardRarity;
 
@@ -63,17 +31,67 @@ const RARITY_FILTERS: CardRarity[] = ['COMMUNE', 'RARE', 'ULTRA_RARE', 'SHINY', 
 export default function CollectionPage() {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
-  const [selectedCard, setSelectedCard] = useState<typeof MOCK_COLLECTION[0] | null>(null);
+  const [selectedCard, setSelectedCard] = useState<CollectionItem | null>(null);
+  const [collection, setCollection] = useState<CollectionItem[]>([]);
+  const [stats, setStats] = useState({ totalCards: 0, uniqueCards: 0, byRarity: {} as Record<string, number> });
+  const [loading, setLoading] = useState(true);
+  const [dusting, setDusting] = useState<string | null>(null);
 
-  // In a real app, we'd filter the actual DB results
-  const filteredCollection = MOCK_COLLECTION;
+  useEffect(() => {
+    fetch('/api/collection')
+      .then(res => res.json())
+      .then((data: CollectionResponse) => {
+        setCollection(data.collection);
+        setStats(data.stats);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-  const totalCards = MOCK_COLLECTION.reduce((sum, item) => sum + item.quantity, 0);
-  const uniqueCards = MOCK_COLLECTION.length;
+  const filteredCollection = collection.filter(item => {
+    if (activeFilter === 'ALL') return true;
+    if (item.card.type === activeFilter) return true;
+    if (item.rarity === activeFilter) return true;
+    return false;
+  });
 
-  const handleDust = () => {
-    alert("Fonctionnalité de recyclage (Dusting) bientôt disponible !");
+  const handleDust = async (instanceId: string) => {
+    if (!confirm('Recycler cette carte pour obtenir de la poussière ? Cette action est irréversible.')) return;
+    
+    setDusting(instanceId);
+    try {
+      const res = await fetch('/api/collection/dust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instanceId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+      
+      // Refresh collection
+      const fresh = await fetch('/api/collection').then(r => r.json());
+      setCollection(fresh.collection);
+      setStats(fresh.stats);
+      setSelectedCard(null);
+      alert(`+${data.dustGained} poussière obtenue !`);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setDusting(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <main className={styles.collectionPage}>
+        <header className={styles.header}>
+          <button className={styles.backBtn} onClick={() => router.push('/')}>←</button>
+          <div className={styles.headerTitle}>Ma Collection</div>
+        </header>
+        <div className={styles.loading}>Chargement de la collection...</div>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.collectionPage}>
@@ -84,7 +102,7 @@ export default function CollectionPage() {
         </button>
         <div className={styles.headerTitle}>Ma Collection</div>
         <div className={styles.statsBadge}>
-          {uniqueCards} uniques ({totalCards} total)
+          {stats.uniqueCards} uniques ({stats.totalCards} total)
         </div>
       </header>
 
@@ -122,24 +140,30 @@ export default function CollectionPage() {
 
         {/* Grid */}
         <div className={styles.grid}>
-          {filteredCollection.map((item) => (
-            <div 
-              key={item.instanceId} 
-              className={styles.cardItem}
-              onClick={() => setSelectedCard(item)}
-            >
-              {item.quantity > 1 && (
-                <div className={styles.quantityBadge}>x{item.quantity}</div>
-              )}
-              <CardFrame
+          {filteredCollection.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>Aucune carte pour ce filtre.</p>
+            </div>
+          ) : (
+            filteredCollection.map((item) => (
+              <div 
+                key={item.instances[0]} 
+                className={styles.cardItem}
+                onClick={() => setSelectedCard(item)}
+              >
+                {item.quantity > 1 && (
+                  <div className={styles.quantityBadge}>x{item.quantity}</div>
+                )}
+<CardFrame
                 card={item.card}
                 rarity={item.rarity}
-                mintNumber={item.mintNumber}
-                maxMint={item.maxMint}
+                mintNumber={item.mintNumber ?? undefined}
+                maxMint={item.maxMint ?? undefined}
                 size="small"
               />
-            </div>
-          ))}
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -156,8 +180,8 @@ export default function CollectionPage() {
               <CardFrame
                 card={selectedCard.card}
                 rarity={selectedCard.rarity}
-                mintNumber={selectedCard.mintNumber}
-                maxMint={selectedCard.maxMint}
+                mintNumber={selectedCard.mintNumber ?? undefined}
+                maxMint={selectedCard.maxMint ?? undefined}
                 size="large"
               />
             </div>
@@ -185,7 +209,7 @@ export default function CollectionPage() {
                   <span>📜</span> Le Lore
                 </div>
                 <div className={styles.loreText}>
-                  {(selectedCard.card as any).loreAlbum || "Aucune légende n'a encore été écrite pour cette carte."}
+                  {selectedCard.card.loreAlbum || "Aucune légende n'a encore été écrite pour cette carte."}
                 </div>
               </div>
               
@@ -195,8 +219,12 @@ export default function CollectionPage() {
                     Tu as <strong>{selectedCard.quantity}</strong> exemplaires de cette carte.<br/>
                     Recycle les doublons pour obtenir de la poussière.
                   </div>
-                  <button className={styles.dustBtn} onClick={handleDust}>
-                    Recycler 1x
+                  <button 
+                    className={`${styles.dustBtn} ${dusting === selectedCard.instances[0] ? styles.loading : ''}`}
+                    onClick={() => handleDust(selectedCard.instances[0])}
+                    disabled={!!dusting}
+                  >
+                    {dusting === selectedCard.instances[0] ? 'Recyclage...' : 'Recycler 1x'}
                   </button>
                 </div>
               )}
