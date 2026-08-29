@@ -49,25 +49,19 @@ export default function OpenPackPage() {
     finally{ setLoading(false); }
   };
 
-  // 1-tap simplifié : COMMUNE/RARE -> flip direct C, ULTRA/SHINY/GOLD -> flip + spin + C + auto next
+  // 1-tap : flip -> C, reste affiché jusqu'au tap suivant (contemplation ultra)
   const handlePileTap = () => {
     if (packState!=='PILE') return;
     const idx = active;
     if (phases[idx]==='C') {
       if (idx < pulledCards.length-1) setActive(idx+1);
+      else setPackState('FINISHED');
       return;
     }
     if (!flipped[idx]) {
       const nf=[...flipped]; nf[idx]=true; setFlipped(nf);
-      const rarity = pulledCards[idx].rarity;
-      const isWow = rarity==='ULTRA_RARE' || rarity==='SHINY' || rarity==='GOLD';
       const np=[...phases]; np[idx]='C'; setPhases(np);
-      // temps d'admiration : plus long, varié selon rareté
-      const delay = isWow ? (rarity==='GOLD' ? 3200 : rarity==='SHINY' ? 2800 : 2400) : 1800;
-      setTimeout(()=>{
-        if (idx === pulledCards.length-1) setPackState('FINISHED');
-        else setActive(idx+1);
-      }, delay);
+      // reste sur la carte jusqu'au prochain tap (pas d'auto)
     }
   };
 
