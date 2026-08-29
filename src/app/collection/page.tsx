@@ -41,7 +41,9 @@ export default function CollectionPage() {
   const [collection, setCollection] = useState<CollectionItem[]>([]);
   const [allCards, setAllCards] = useState<CardData[]>([]);
   const [missing, setMissing] = useState<CardData[]>([]);
-  const [stats, setStats] = useState({ totalCards: 0, uniqueCards: 0, totalInGame: 0 });
+  const [allVariants, setAllVariants] = useState<{cardId:string, card:CardData, rarity:CardRarity, maxSupply:number|null}[]>([]);
+  const [missingVariants, setMissingVariants] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalCards: 0, uniqueCards: 0, totalInGame: 0, totalVariants: 0 });
   const [loading, setLoading] = useState(true);
   const [dusting, setDusting] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -49,38 +51,41 @@ export default function CollectionPage() {
   useEffect(() => {
     fetch('/api/collection').then(r=>r.json()).then(d=>{
       setCollection(d.collection||[]); setAllCards(d.allCards||[]); setMissing(d.missing||[]);
-      setStats({ totalCards:d.stats?.totalCards||0, uniqueCards:d.stats?.uniqueCards||0, totalInGame:d.totalInGame||0 });
+      setAllVariants(d.allVariants||[]); setMissingVariants(d.missingVariants||[]);
+      setStats({ totalCards:d.stats?.totalCards||0, uniqueCards:d.stats?.uniqueCards||0, totalInGame:d.totalInGame||0, totalVariants:d.totalVariants||0 });
       setLoading(false);
     }).catch(()=>setLoading(false));
   }, []);
 
-  const progress = stats.totalInGame ? Math.round((stats.uniqueCards / stats.totalInGame) * 100) : 0;
+  const progress = stats.totalVariants ? Math.round((stats.uniqueCards / stats.totalVariants) * 100) : 0;
 
   let display: any[] = [];
   if (viewMode==='owned') display = collection.filter(item=>{
-    if(search && !`${item.card.name} ${item.card.title} ${item.card.id}`.toLowerCase().includes(search.toLowerCase())) return false;
+    if(search && !`${item.card.name} ${item.card.title} ${item.card.id} ${item.rarity}`.toLowerCase().includes(search.toLowerCase())) return false;
     if(activeFilter==='ALL') return true;
     if(item.card.type===activeFilter) return true;
     if(item.rarity===activeFilter) return true;
     return false;
   }).map(item=>({type:'owned', item}));
-  else if (viewMode==='missing') display = missing.filter(c=>{
-    if(search && !`${c.name} ${c.title} ${c.id}`.toLowerCase().includes(search.toLowerCase())) return false;
-    if(activeFilter==='ALL') return true;
-    if((c as any).type===activeFilter) return true;
-    return false;
-  }).map(card=>({type:'missing', card}));
-  else {
-    // album: all cards, owned highlighted
-    display = allCards.filter(c=>{
-      if(search && !`${c.name} ${c.title} ${c.id}`.toLowerCase().includes(search.toLowerCase())) return false;
-      if(RARITY_FILTERS.some(r=> r.id===activeFilter)){
-        if(!collection.some(col=> col.card.id===c.id && col.rarity===activeFilter)) return false;
-      } else if(activeFilter!=='ALL' && (c as any).type!==activeFilter) return false;
+  else if (viewMode==='missing') {
+    // variantes manquantes (40 - possédées)
+    display = missingVariants.filter((v:any)=>{
+      if(search && !`${v.card.name} ${v.card.title} ${v.card.id} ${v.rarity}`.toLowerCase().includes(search.toLowerCase())) return false;
+      if(activeFilter==='ALL') return true;
+      if((v.card as any).type===activeFilter) return true;
+      if(v.rarity===activeFilter) return true;
+      return false;
+    }).map((v:any)=>({type:'missingVariant', card: v.card, rarity: v.rarity}));
+  } else {
+    // album: toutes les variantes 40, possédées vs manquantes par rareté
+    display = allVariants.filter((v:any)=>{
+      if(search && !`${v.card.name} ${v.card.title} ${v.card.id} ${v.rarity}`.toLowerCase().includes(search.toLowerCase())) return false;
+      if(RARITY_FILTERS.some(r=> r.id===activeFilter) && v.rarity!==activeFilter) return false;
+      if(!RARITY_FILTERS.some(r=> r.id===activeFilter) && activeFilter!=='ALL' && (v.card as any).type!==activeFilter) return false;
       return true;
-    }).map(c=>{
-      const owned = collection.find(col=> col.card.id===c.id);
-      return owned ? {type:'owned', item:owned} : {type:'missing', card:c};
+    }).map((v:any)=>{
+      const owned = collection.find(col=> col.card.id===v.cardId && col.rarity===v.rarity);
+      return owned ? {type:'owned', item:owned} : {type:'missingVariant', card: v.card, rarity: v.rarity};
     });
   }
 
@@ -91,8 +96,8 @@ export default function CollectionPage() {
       const r=await fetch('/api/collection/dust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({instanceId})});
       const d=await r.json(); if(!r.ok) throw new Error(d.error);
       const fresh=await fetch('/api/collection').then(r=>r.json());
-      setCollection(fresh.collection); setAllCards(fresh.allCards); setMissing(fresh.missing);
-      setStats({ totalCards:fresh.stats.totalCards, uniqueCards:fresh.stats.uniqueCards, totalInGame:fresh.totalInGame });
+      setCollection(fresh.collection); setAllCards(fresh.allCards); setMissing(fresh.missing); setMissingVariants(fresh.missingVariants||[]); setAllVariants(fresh.allVariants||[]);
+      setStats({ totalCards:fresh.stats.totalCards, uniqueCards:fresh.stats.uniqueCards, totalInGame:fresh.totalInGame, totalVariants:fresh.totalVariants||40 });
       setSelectedCard(null);
     }catch(e:any){ alert(e.message); } finally{ setDusting(null); }
   };
@@ -104,21 +109,21 @@ export default function CollectionPage() {
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={()=>router.push('/')}>←</button>
         <div className={styles.headerTitle}>Pokédex Milf</div>
-        <div className={styles.statsBadge}>{stats.uniqueCards}/{stats.totalInGame}</div>
+        <div className={styles.statsBadge}>{stats.uniqueCards}/{stats.totalVariants || 40} variantes</div>
       </header>
 
       <div className={styles.content}>
-        {/* Progress à la Pokémon */}
+        {/* Progress à la Pokémon : 40 variantes */}
         <div style={{background:'white',borderRadius:16,padding:14,border:'1px solid rgba(26,22,18,0.08)',boxShadow:'0 2px 12px rgba(0,0,0,0.04)',marginBottom:12}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-            <strong style={{fontFamily:'var(--font-display)'}}>{stats.uniqueCards} / {stats.totalInGame} cartes découvertes</strong>
+            <strong style={{fontFamily:'var(--font-display)'}}>{stats.uniqueCards} / {stats.totalVariants || 40} variantes découvertes</strong>
             <span style={{fontSize:'0.8rem',color:'var(--color-text-muted)'}}>{stats.totalCards} exemplaires</span>
           </div>
           <div style={{height:10,background:'rgba(26,22,18,0.08)',borderRadius:999,overflow:'hidden'}}>
             <div style={{height:'100%',width:`${progress}%`,background:'linear-gradient(90deg, #c9a84c, #e8d48b)',borderRadius:999,transition:'width 0.6s'}}/>
           </div>
-          <div style={{fontSize:'0.75rem',color:'var(--color-text-muted)',marginTop:6,display:'flex',gap:8,flexWrap:'wrap'}}>
-            {missing.length>0 ? <>Manquent : <strong>{missing.map(m=>m.id).join(', ')}</strong> — {missing.length} à trouver</> : <>🎉 Collection complète !</>}
+          <div style={{fontSize:'0.75rem',color:'var(--color-text-muted)',marginTop:6}}>
+            {missingVariants.length>0 ? <>Manquent : <strong>{missingVariants.slice(0,6).map((v:any)=> `${v.cardId} ${v.rarity}`).join(', ')}{missingVariants.length>6?` +${missingVariants.length-6}`:''}</strong> — {missingVariants.length} variantes à trouver (SHINY/GOLD = secrètes)</> : <>🎉 40/40 !</>}
           </div>
         </div>
 
@@ -126,14 +131,14 @@ export default function CollectionPage() {
         <div style={{display:'flex',gap:8,marginBottom:12}}>
           {(['album','owned','missing'] as ViewMode[]).map(m=>(
             <button key={m} onClick={()=>setViewMode(m)} className={`${styles.filterBtn} ${viewMode===m?styles.active:''}`} style={{flex:1,justifyContent:'center',display:'flex',gap:6,padding:'10px 8px',fontWeight:700}}>
-              {m==='album' ? `📚 Album (${stats.totalInGame})` : m==='owned' ? `✅ Possédées (${stats.uniqueCards})` : `❓ Manquantes (${missing.length})`}
+              {m==='album' ? `📚 Album (40)` : m==='owned' ? `✅ Possédées (${stats.uniqueCards})` : `❓ Manquantes (${missingVariants.length})`}
             </button>
           ))}
         </div>
         <div style={{fontSize:'0.75rem',color:'var(--color-text-muted)',marginBottom:12,textAlign:'center'}}>
-          {viewMode==='album' && 'Album = toutes les cartes du jeu (grisées si manquantes). Parfait pour admirer.'}
-          {viewMode==='owned' && 'Seulement tes cartes obtenues.'}
-          {viewMode==='missing' && 'Seulement celles qui te manquent.'}
+          {viewMode==='album' && 'Album = 40 variantes (8 cartes × 5 raretés, SHINY/GOLD secrètes). Chaque rareté = carte différente.'}
+          {viewMode==='owned' && 'Tes variantes obtenues. Recherche “T-Max RARE” pour voir toutes les raretés d’un même perso.'}
+          {viewMode==='missing' && 'Variantes non obtenues. Filtre par rareté/type pour chasser.'}
         </div>
 
         {/* Recherche */}
@@ -161,18 +166,19 @@ export default function CollectionPage() {
 
         <div className={styles.grid}>
           {display.length===0 ? <div className={styles.emptyState}><p>Aucune carte.</p></div> : display.map((entry:any)=>{
-            if(entry.type==='missing'){
+            if(entry.type==='missingVariant'){
               const c=entry.card as CardData;
+              const r=entry.rarity as CardRarity;
               return (
-                <div key={`miss-${c.id}`} className={styles.cardItem} style={{opacity:0.5}}>
-                  <div style={{position:'relative', filter:'grayscale(1) brightness(0.9)'}}>
-                    <CardFrame card={c} rarity="COMMUNE" size="small" isFlipped revealPhase="C" />
+                <div key={`miss-${c.id}-${r}`} className={styles.cardItem} style={{opacity:0.5}}>
+                  <div style={{position:'relative', filter:'grayscale(1) brightness(0.92)'}}>
+                    <CardFrame card={c} rarity={r} size="small" isFlipped revealPhase="C" />
                     <div style={{position:'absolute',inset:0,background:'rgba(248,246,242,0.72)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:2,border:'2px dashed rgba(26,22,18,0.12)'}}>
-                      <span style={{fontSize:'1.4rem'}}>🔒</span><span style={{fontSize:'0.65rem',fontWeight:800}}>#{c.id}</span><span style={{fontSize:'0.6rem'}}>MANQUE</span>
+                      <span style={{fontSize:'1.4rem'}}>🔒</span><span style={{fontSize:'0.65rem',fontWeight:800}}>{c.id} {r}</span>
                     </div>
-                    <div style={{position:'absolute',top:-6,right:-6,background:'#1a1612',color:'white',fontSize:'0.6rem',padding:'2px 6px',borderRadius:999,fontWeight:700}}>{c.id}</div>
+                    <div style={{position:'absolute',top:-6,right:-6,background:RARITY_FILTERS.find(x=>x.id===r)?.color || '#1a1612',color:'white',fontSize:'0.55rem',padding:'2px 6px',borderRadius:999,fontWeight:700}}>{r}</div>
                   </div>
-                  <div style={{textAlign:'center',marginTop:6}}><div style={{fontSize:'0.75rem',fontWeight:700}}>{c.name}</div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{c.title}</div></div>
+                  <div style={{textAlign:'center',marginTop:6}}><div style={{fontSize:'0.75rem',fontWeight:700}}>{c.name}</div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{c.id} • {r}</div></div>
                 </div>
               );
             } else {

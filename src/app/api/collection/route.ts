@@ -45,9 +45,19 @@ export async function GET() {
       grouped[key].instances.push(uc.instanceId);
     }
 
+    // Toutes les variantes (carte × rareté) = 8 × 5 = 40 à collectionner
+    const allVariants = await prisma.cardScarcity.findMany({
+      include: { card: true },
+      orderBy: [{ cardId: 'asc' }, { rarity: 'asc' }],
+    });
     const allCards = await prisma.card.findMany({ orderBy: { id: 'asc' } });
-    const ownedIds = new Set(userCards.map(u => u.cardId));
-    const missing = allCards.filter(c => !ownedIds.has(c.id));
+
+    // missing = variantes non possédées (par rareté)
+    const ownedKeys = new Set(Object.keys(grouped)); // "card_001-COMMUNE"
+    const missingVariants = allVariants.filter(v => !ownedKeys.has(`${v.cardId}-${v.rarity}`));
+    // compat: missing par carte (ancienne UI) + missingVariants
+    const ownedCardIds = new Set(userCards.map(u => u.cardId));
+    const missing = allCards.filter(c => !ownedCardIds.has(c.id));
 
     return NextResponse.json({
       collection: Object.values(grouped),
@@ -62,6 +72,19 @@ export async function GET() {
       allCards,
       missing,
       totalInGame: allCards.length,
+      allVariants: allVariants.map(v => ({
+        cardId: v.cardId,
+        card: v.card,
+        rarity: v.rarity,
+        maxSupply: v.maxSupply,
+      })),
+      missingVariants: missingVariants.map(v => ({
+        cardId: v.cardId,
+        card: v.card,
+        rarity: v.rarity,
+        maxSupply: v.maxSupply,
+      })),
+      totalVariants: allVariants.length,
     });
   } catch (e: any) {
     console.error('Collection error:', e);
