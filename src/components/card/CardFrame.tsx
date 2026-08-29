@@ -97,10 +97,12 @@ export default function CardFrame({
     getSizeClass(),
   ].filter(Boolean).join(' ');
 
+  const isFullBleed = rarity === 'ULTRA_RARE' || rarity === 'SHINY' || rarity === 'GOLD';
   const frontClasses = [
     styles.cardFront,
     getRevealClass(),
     (revealPhase==='C' && rarity==='ULTRA_RARE') ? styles.ultraBg : '',
+    isFullBleed ? styles.isFullBleed : '',
   ].filter(Boolean).join(' ');
 
   return (

@@ -527,8 +527,62 @@
 }
 
 /* ==========================================
-   CARD HOVER EFFECT (desktop)
-   ========================================== */
+    FULL-BLEED ULTRA/SHINY/GOLD (texte sur illustration)
+    ========================================== */
+.isFullBleed .cardIllustration {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  border-radius: 14px;
+  min-height: 0;
+  background: #1a1612;
+}
+.isFullBleed .cardIllustration::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 28%, transparent 62%, rgba(0,0,0,0.65) 100%);
+  z-index: 1;
+}
+.isFullBleed .illustrationImg {
+  filter: saturate(1.05) contrast(1.05);
+}
+.isFullBleed .cardHeader {
+  background: transparent;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 14px 14px 20px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, transparent 100%);
+  z-index: 4;
+}
+.isFullBleed .cardName { color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5); }
+.isFullBleed .cardTitle { color: rgba(255,255,255,0.85); text-shadow: 0 1px 6px rgba(0,0,0,0.7); }
+.isFullBleed .cardScore { box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+.isFullBleed .cardAction {
+  position: absolute;
+  bottom: 36px; left: 10px; right: 10px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 8px 10px;
+  z-index: 4;
+}
+.isFullBleed .actionText { color: rgba(255,255,255,0.92); }
+.isFullBleed .actionValue { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+.isFullBleed .cardFooter {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+  z-index: 4;
+  padding: 8px 14px 10px;
+}
+.isFullBleed .cardTypeBadge { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.9); backdrop-filter: blur(4px); }
+.isFullBleed .mintNumber { color: rgba(255,255,255,0.9); }
+
+/* ==========================================
+    CARD HOVER EFFECT (desktop)
+    ========================================== */
 @media (hover: hover) {
   .cardWrapper:hover .cardInner {
     transform: translateY(-4px);

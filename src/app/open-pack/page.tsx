@@ -49,50 +49,25 @@ export default function OpenPackPage() {
     finally{ setLoading(false); }
   };
 
-  const handleStageTap = () => {
-    if (packState!=='PILE') return;
-    const idx = active;
-    if (idx >= pulledCards.length) return;
-    if (!flipped[idx]) {
-      const nf=[...flipped]; nf[idx]=true; setFlipped(nf);
-      const np=[...phases]; np[idx]='A'; setPhases(np);
-    } else {
-      const cur = phases[idx];
-      const np=[...phases];
-      if (cur==='A') { np[idx]='B'; setPhases(np); }
-      else if (cur==='B') {
-        np[idx]='C'; setPhases(np);
-        // wow background for ultra/shiny/gold
-        setTimeout(()=> {
-          if (revealedCount+1 >= pulledCards.length) setPackState('FINISHED');
-          else { setActive(idx+1); setRevealedCount(c=>c+1); }
-        }, 700);
-        if (cur==='B') setRevealedCount(c=> c); // keep
-      } else if (cur==='C') {
-        // already revealed, go next
-        if (idx+1 < pulledCards.length) { setActive(idx+1); }
-      }
-    }
-  };
-
-  // tap progression: A -> B -> C via same tap. Simplify: second tap goes B, third tap goes C and advances pile
+  // 1-tap simplifié : COMMUNE/RARE -> flip direct C, ULTRA/SHINY/GOLD -> flip + spin + C + auto next
   const handlePileTap = () => {
     if (packState!=='PILE') return;
     const idx = active;
-    const cur = phases[idx];
+    if (phases[idx]==='C') {
+      if (idx < pulledCards.length-1) setActive(idx+1);
+      return;
+    }
     if (!flipped[idx]) {
       const nf=[...flipped]; nf[idx]=true; setFlipped(nf);
-      const np=[...phases]; np[idx]='A'; setPhases(np);
-    } else if (cur==='A') {
-      const np=[...phases]; np[idx]='B'; setPhases(np);
-    } else if (cur==='B') {
+      const rarity = pulledCards[idx].rarity;
+      const isWow = rarity==='ULTRA_RARE' || rarity==='SHINY' || rarity==='GOLD';
       const np=[...phases]; np[idx]='C'; setPhases(np);
+      // delay auto-next : court pour commune, long pour wow (laisse voir spin + holo)
+      const delay = isWow ? 1600 : 700;
       setTimeout(()=>{
         if (idx === pulledCards.length-1) setPackState('FINISHED');
         else setActive(idx+1);
-      }, 650);
-    } else if (cur==='C') {
-      if (idx < pulledCards.length-1) setActive(idx+1);
+      }, delay);
     }
   };
 
@@ -171,7 +146,7 @@ export default function OpenPackPage() {
               })}
             </div>
             <div className={styles.tapHint}>
-              { !flipped[active] ? 'Tape pour révéler →' : phases[active]==='A' ? 'Tape → stats' : phases[active]==='B' ? 'Tape → illustration ✨' : active < pulledCards.length-1 ? 'Tape pour carte suivante' : 'Dernière carte !'}
+              { !flipped[active] ? `Tape pour révéler — ${pulledCards[active]?.rarity.replace('_',' ')}` : phases[active]==='C' && active < pulledCards.length-1 ? 'Tape pour suivante →' : phases[active]==='C' ? 'Dernière !' : 'Révélation...'}
             </div>
           </>
         )}
