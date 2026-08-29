@@ -240,7 +240,7 @@ export default function AdminPage() {
                     <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}><option>PERSONNAGE</option><option>OBJET</option><option>LIEU</option><option>SOUVENIR</option><option>REFERENCE</option></select>
                     <input type="number" placeholder="Score 0-100" value={form.overallScore} onChange={e=>setForm({...form,overallScore:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
                     <input placeholder="Illustration URL" value={form.illustrationUrl} onChange={e=>setForm({...form,illustrationUrl:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
-                    <input placeholder="Icon URL" value={form.iconUrl} onChange={e=>setForm({...form,iconUrl:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
+                    {/* iconUrl gardé pour compat mais caché - non utilisé visuellement */}
                     <input placeholder="Action description" value={form.actionDescription} onChange={e=>setForm({...form,actionDescription:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
                     <input type="number" placeholder="Action value" value={form.actionValue} onChange={e=>setForm({...form,actionValue:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
                     <textarea placeholder="Lore album" value={form.loreAlbum} onChange={e=>setForm({...form,loreAlbum:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6,minHeight:60}}/>

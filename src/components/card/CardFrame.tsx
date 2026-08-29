@@ -151,7 +151,6 @@ export default function CardFrame({
           {/* Action (Phase B) */}
           <div className={styles.cardAction}>
             <div className={styles.actionRow}>
-              <div className={styles.actionIcon}>{card.iconUrl ? <img src={card.iconUrl} alt="icon" style={{width: '100%', height: '100%'}}/> : '⚔️'}</div>
               <p className={styles.actionText}>{card.actionDescription}</p>
               <div className={styles.actionValue}>{card.actionValue}</div>
             </div>
