@@ -62,8 +62,8 @@ export default function OpenPackPage() {
       const rarity = pulledCards[idx].rarity;
       const isWow = rarity==='ULTRA_RARE' || rarity==='SHINY' || rarity==='GOLD';
       const np=[...phases]; np[idx]='C'; setPhases(np);
-      // delay auto-next : court pour commune, long pour wow (laisse voir spin + holo)
-      const delay = isWow ? 1600 : 700;
+      // temps d'admiration : plus long, varié selon rareté
+      const delay = isWow ? (rarity==='GOLD' ? 3200 : rarity==='SHINY' ? 2800 : 2400) : 1800;
       setTimeout(()=>{
         if (idx === pulledCards.length-1) setPackState('FINISHED');
         else setActive(idx+1);

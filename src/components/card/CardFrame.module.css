@@ -343,12 +343,20 @@
   position: absolute;
   inset: -20%;
   background:
-    radial-gradient(ellipse at calc(var(--mx,50)*1%) calc(var(--my,50)*1%), rgba(155,89,182,0.45) 0%, transparent 40%),
-    radial-gradient(ellipse at 20% 80%, rgba(60,180,255,0.25) 0%, transparent 50%),
-    linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.18) 45%, transparent 60%);
+    radial-gradient(ellipse at calc(var(--mx,50)*1%) calc(var(--my,50)*1%), rgba(155,89,182,0.5) 0%, transparent 38%),
+    radial-gradient(ellipse at 80% 20%, rgba(60,180,255,0.28) 0%, transparent 45%),
+    repeating-linear-gradient(0deg, transparent 0 10px, rgba(255,255,255,0.05) 10px 11px),
+    conic-gradient(from 180deg at 50% 50%, rgba(155,89,182,0.18), rgba(60,180,255,0.18), rgba(155,89,182,0.18)),
+    linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.22) 45%, transparent 60%);
   mix-blend-mode: screen;
   opacity: 0.9;
   transition: opacity 0.2s;
+  animation: ultraShift 4s linear infinite;
+}
+@keyframes ultraShift {
+  0% { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(15deg) brightness(1.15); }
+  100% { filter: hue-rotate(0deg) brightness(1); }
 }
 .ultraOverlay::after {
   content: '';
@@ -372,13 +380,20 @@
   position: absolute;
   inset: -30%;
   background:
-    linear-gradient(105deg, transparent 15%, rgba(255,0,128,0.22) 25%, rgba(0,220,255,0.22) 35%, rgba(255,240,0,0.22) 45%, rgba(120,90,255,0.22) 55%, transparent 70%),
+    linear-gradient(105deg, transparent 10%, rgba(255,0,128,0.28) 22%, rgba(0,220,255,0.28) 32%, rgba(255,240,0,0.28) 42%, rgba(120,90,255,0.28) 52%, transparent 68%),
+    repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,255,255,0.07) 8px 9px),
+    radial-gradient(circle at 30% 40%, rgba(255,255,255,0.45) 0 2%, transparent 2.5%),
+    radial-gradient(circle at 70% 65%, rgba(255,255,255,0.35) 0 1.5%, transparent 2%),
     linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.55) 40%, transparent 60%);
-  background-size: 200% 100%, 200% 100%;
-  background-position: calc(var(--mx,50)*1% + calc(var(--my,50)*0.5%)) 50%, calc((100 - var(--mx,50))*1%) 50%;
+  background-size: 200% 100%, 100% 100%, 100% 100%, 100% 100%, 200% 100%;
+  background-position: calc(var(--mx,50)*1% + calc(var(--my,50)*0.5%)) 50%, 0 0, 0 0, 0 0, calc((100 - var(--mx,50))*1%) 50%;
   mix-blend-mode: color-dodge;
   opacity: 0.95;
-  animation: holoShift 2.8s linear infinite;
+  animation: holoShift 2.8s linear infinite, holoPulse 3.2s ease-in-out infinite;
+}
+@keyframes holoPulse {
+  0%,100% { opacity: 0.85; }
+  50% { opacity: 1; }
 }
 .shinyOverlay::after {
   content: '';
@@ -402,9 +417,11 @@
   position: absolute;
   inset: -30%;
   background:
-    linear-gradient(110deg, transparent 20%, rgba(255,215,0,0.55) 30%, rgba(255,255,255,0.7) 38%, rgba(255,180,0,0.45) 45%, transparent 60%),
-    radial-gradient(ellipse at calc(var(--mx,50)*1%) calc(var(--my,50)*1%), rgba(255,255,255,0.55) 0%, transparent 35%);
-  background-size: 200% 100%, 100% 100%;
+    linear-gradient(110deg, transparent 12%, rgba(255,215,0,0.6) 24%, rgba(255,255,255,0.85) 32%, rgba(255,180,0,0.5) 40%, transparent 58%),
+    repeating-linear-gradient(135deg, transparent 0 12px, rgba(255,255,255,0.08) 12px 13px),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 14px, rgba(255,255,255,0.06) 14px 15px),
+    radial-gradient(ellipse at calc(var(--mx,50)*1%) calc(var(--my,50)*1%), rgba(255,255,255,0.65) 0%, transparent 32%);
+  background-size: 200% 100%, 100% 100%, 100% 100%, 100% 100%;
   mix-blend-mode: color-dodge;
   animation: holoShift 2.2s linear infinite;
 }
