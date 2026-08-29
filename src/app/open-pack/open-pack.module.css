@@ -342,6 +342,78 @@
 /* keep legacy for finished fallback */
 .cardsContainer { display: none; }
 
+/* Background immersif par rareté - plein écran derrière la carte */
+.rarityBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  animation: bgIn 0.6s ease forwards;
+  overflow: hidden;
+}
+.rarityBg::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  opacity: 0.95;
+}
+.rarityBg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+@keyframes bgIn { from { opacity: 0; } to { opacity: 1; } }
+
+.bgCOMMUNE::before {
+  background: radial-gradient(ellipse at center, rgba(140,140,140,0.18) 0%, transparent 65%);
+}
+.bgRARE::before {
+  background: radial-gradient(ellipse at center, rgba(74,124,201,0.32) 0%, rgba(74,124,201,0.1) 40%, transparent 70%);
+  animation: bgPulse 2s ease-in-out infinite;
+}
+.bgULTRA_RARE::before {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(155,89,182,0.55) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 80%, rgba(60,180,255,0.4) 0%, transparent 45%),
+    conic-gradient(from 0deg at 50% 50%, rgba(155,89,182,0.25), rgba(60,180,255,0.25), rgba(155,89,182,0.25));
+  filter: blur(18px);
+  animation: bgRotate 6s linear infinite;
+}
+.bgSHINY::before {
+  background:
+    linear-gradient(100deg, rgba(255,0,128,0.35), rgba(0,220,255,0.35), rgba(255,240,0,0.35), rgba(120,90,255,0.35)),
+    repeating-linear-gradient(90deg, transparent 0 14px, rgba(255,255,255,0.04) 14px 15px),
+    radial-gradient(ellipse at center, rgba(255,255,255,0.18) 0%, transparent 60%);
+  background-size: 200% 100%, 100% 100%, 100% 100%;
+  animation: bgShift 2.2s linear infinite;
+}
+.bgGOLD::before {
+  background:
+    radial-gradient(ellipse at center, rgba(255,215,0,0.5) 0%, rgba(255,165,0,0.28) 30%, transparent 65%),
+    linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.2) 35%, transparent 50%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 22px, rgba(255,255,255,0.05) 22px 23px);
+  animation: bgGoldPulse 1.8s ease-in-out infinite;
+}
+.bgGOLD::after { opacity: 0.18; }
+.bgSHINY::after, .bgULTRA_RARE::after { opacity: 0.12; }
+
+@keyframes bgPulse { 0%,100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes bgRotate { 0% { transform: rotate(0deg) scale(1.1); } 100% { transform: rotate(360deg) scale(1.1); } }
+@keyframes bgShift { 0% { background-position: -50% 0, 0 0, 0 0; } 100% { background-position: 150% 0, 0 0, 0 0; } }
+@keyframes bgGoldPulse { 0%,100% { opacity: 0.85; filter: brightness(1); } 50% { opacity: 1; filter: brightness(1.25); } }
+
+/* carte immergée : zoom + halo quand wow */
+.pileCard.pileActive:has(+ .rarityBg) { /* fallback if needed */ }
+.stage:has(.bgULTRA_RARE) .pileActive,
+.stage:has(.bgSHINY) .pileActive,
+.stage:has(.bgGOLD) .pileActive {
+  transform: translate(-50%,-50%) scale(1.18) !important;
+  filter: drop-shadow(0 25px 60px rgba(0,0,0,0.6)) drop-shadow(0 0 30px currentColor);
+  z-index: 25 !important;
+}
+
 /* ==========================================
    REVEAL INSTRUCTIONS / BUTTONS
    ========================================== */

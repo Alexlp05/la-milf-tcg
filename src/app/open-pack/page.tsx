@@ -81,6 +81,10 @@ export default function OpenPackPage() {
       </header>
 
       <div className={styles.stage} onClick={packState==='PILE' ? handlePileTap : undefined}>
+        {/* Background immersif par rareté - ne s'affiche qu'une fois révélé, ne spoil pas avant */}
+        {packState==='PILE' && flipped[active] && phases[active]==='C' && (
+          <div className={`${styles.rarityBg} ${styles['bg'+pulledCards[active].rarity]}`} key={active} />
+        )}
         <div className={styles.spotlight} />
 
         {packState==='SELECTING' && (
@@ -151,7 +155,7 @@ export default function OpenPackPage() {
               })}
             </div>
             <div className={styles.tapHint}>
-              { !flipped[active] ? `Tape pour révéler — ${pulledCards[active]?.rarity.replace('_',' ')}` : phases[active]==='C' && active < pulledCards.length-1 ? 'Tape pour suivante →' : phases[active]==='C' ? 'Dernière !' : 'Révélation...'}
+              { !flipped[active] ? 'Tape pour révéler →' : phases[active]==='C' && active < pulledCards.length-1 ? 'Carte suivante →' : phases[active]==='C' ? 'Dernière ! Tape pour terminer' : '...'}
             </div>
           </>
         )}
