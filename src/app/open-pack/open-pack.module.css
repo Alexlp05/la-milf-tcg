@@ -163,69 +163,78 @@
   75% { transform: rotate(1deg); }
 }
 
-/* ==========================================
-   STATE 2: THE CARDS (Distributed)
-   ========================================== */
-.cardsContainer {
-  display: flex;
-  gap: var(--space-md);
-  perspective: 1000px;
+/* PILE - 3 cartes superposées */
+.pileContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 392px;
+  transform: translate(-50%, -50%);
+  perspective: 1200px;
+}
+.pileCard {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: max-content;
+  transition: all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
 }
-
-@media (max-width: 768px) {
-  .cardsContainer {
-    flex-direction: column;
-    gap: var(--space-lg);
-  }
+.pileActive {
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
 }
-
-.cardSlot {
-  opacity: 0;
-  transform: translateY(50px) scale(0.8) rotateX(-20deg);
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
+.pileBehind {
+  filter: blur(0.5px) brightness(0.9);
 }
-
-.cardSlot.visible {
-  opacity: 1;
-  transform: translateY(0) scale(1) rotateX(0deg);
-}
-
-/* Stagger entrance animations */
-.cardSlot:nth-child(1) { transition-delay: 0.1s; }
-.cardSlot:nth-child(2) { transition-delay: 0.3s; }
-.cardSlot:nth-child(3) { transition-delay: 0.5s; }
-
-/* The Hit (Slot 3) special aura when face down */
-.cardSlot:nth-child(3).visible::after {
-  content: '';
-  position: absolute;
-  inset: -10px;
-  border-radius: 20px;
-  background: radial-gradient(circle, rgba(201, 168, 76, 0.3) 0%, transparent 70%);
-  z-index: -1;
-  animation: pulse-glow 2s infinite;
+.pileDone {
   pointer-events: none;
 }
+.tapHint {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: white;
+  animation: fadeInUp 0.4s ease;
+  pointer-events: none;
+}
+.finishedGrid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+.finishedCard {
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.finishedCard:nth-child(1){ animation-delay: 0.1s }
+.finishedCard:nth-child(2){ animation-delay: 0.2s }
+.finishedCard:nth-child(3){ animation-delay: 0.3s }
+
+/* keep legacy for finished fallback */
+.cardsContainer { display: none; }
 
 /* ==========================================
    REVEAL INSTRUCTIONS / BUTTONS
    ========================================== */
 .controls {
   position: absolute;
-  bottom: var(--space-2xl);
+  bottom: var(--space-xl);
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   width: 100%;
 }
 

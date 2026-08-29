@@ -13,13 +13,9 @@ interface PulledCard {
   maxMint?: number;
   dustValue: number;
 }
+interface BoosterPack { id: string; packType: 'STANDARD' | 'PREMIUM' | 'WELCOME'; }
 
-interface BoosterPack {
-  id: string;
-  packType: 'STANDARD' | 'PREMIUM' | 'WELCOME';
-}
-
-type PackState = 'SELECTING' | 'TEARING' | 'DISTRIBUTED' | 'REVEALING' | 'FINISHED';
+type PackState = 'SELECTING' | 'TEARING' | 'PILE' | 'FINISHED';
 
 export default function OpenPackPage() {
   const router = useRouter();
@@ -29,225 +25,171 @@ export default function OpenPackPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Track state for each of the 3 cards
   const [pulledCards, setPulledCards] = useState<PulledCard[]>([]);
-  const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false]);
-  const [revealPhases, setRevealPhases] = useState<RevealPhase[]>(['NONE', 'NONE', 'NONE']);
-  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
+  const [flipped, setFlipped] = useState<boolean[]>([false,false,false]);
+  const [phases, setPhases] = useState<RevealPhase[]>(['NONE','NONE','NONE']);
+  const [active, setActive] = useState<number>(0);
+  const [revealedCount, setRevealedCount] = useState(0);
 
-  // Fetch user's unopened packs on mount
   useEffect(() => {
-    fetch('/api/boosters/open', { method: 'GET' }) // We'll add a GET endpoint or fetch from a different endpoint
-      .then(res => res.json())
-      .then(data => {
-        if (data.packs) setPacks(data.packs);
-      })
-      .catch(() => {});
-  }, []);
-
-  // For now, let's fetch from a simple endpoint or use a different approach
-  useEffect(() => {
-    // We'll add a GET to /api/boosters/open to list packs
-    fetch('/api/boosters/open?list=true')
-      .then(res => res.json())
-      .then(data => setPacks(data.packs || []))
-      .catch(() => setPacks([]));
+    fetch('/api/boosters/open').then(r=>r.json()).then(d=> setPacks(d.packs||[])).catch(()=>{});
   }, []);
 
   const handleOpenPack = async () => {
-    if (!selectedPackId || packState !== 'SELECTING') return;
-    
-    setLoading(true);
-    setError(null);
-    setPackState('TEARING');
-
+    if (!selectedPackId || packState!=='SELECTING') return;
+    setLoading(true); setError(null); setPackState('TEARING');
     try {
-      const res = await fetch('/api/boosters/open', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packId: selectedPackId }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur lors de l\'ouverture');
-
-      setPulledCards(data.cards);
-      setFlippedCards([false, false, false]);
-      setRevealPhases(['NONE', 'NONE', 'NONE']);
-      setActiveCardIndex(null);
-      
-      // Wait for tear animation then show cards
-      setTimeout(() => setPackState('DISTRIBUTED'), 1500);
-    } catch (e: any) {
-      setError(e.message);
-      setPackState('SELECTING');
-    } finally {
-      setLoading(false);
-    }
+      const r = await fetch('/api/boosters/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({packId:selectedPackId})});
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error||'Erreur');
+      setPulledCards(d.cards);
+      setFlipped([false,false,false]); setPhases(['NONE','NONE','NONE']); setActive(0); setRevealedCount(0);
+      setTimeout(()=> setPackState('PILE'), 1100);
+    } catch(e:any){ setError(e.message); setPackState('SELECTING'); }
+    finally{ setLoading(false); }
   };
 
-  const handleCardClick = (index: number) => {
-    if (packState !== 'DISTRIBUTED' && packState !== 'REVEALING') return;
-    
-    if (activeCardIndex !== null && activeCardIndex !== index && revealPhases[activeCardIndex] !== 'C') {
-      return;
-    }
-
-    if (!flippedCards[index]) {
-      const newFlipped = [...flippedCards];
-      newFlipped[index] = true;
-      setFlippedCards(newFlipped);
-      
-      const newPhases = [...revealPhases];
-      newPhases[index] = 'A';
-      setRevealPhases(newPhases);
-      
-      setActiveCardIndex(index);
-      setPackState('REVEALING');
-    }
-  };
-
-  const handleNextPhase = () => {
-    if (activeCardIndex === null) return;
-    
-    const currentPhase = revealPhases[activeCardIndex];
-    const newPhases = [...revealPhases];
-    
-    if (currentPhase === 'A') {
-      newPhases[activeCardIndex] = 'B';
-      setRevealPhases(newPhases);
-    } else if (currentPhase === 'B') {
-      newPhases[activeCardIndex] = 'C';
-      setRevealPhases(newPhases);
-      
-      if (newPhases.every(p => p === 'C')) {
-        setTimeout(() => setPackState('FINISHED'), 1000);
-      } else {
-        setActiveCardIndex(null);
+  const handleStageTap = () => {
+    if (packState!=='PILE') return;
+    const idx = active;
+    if (idx >= pulledCards.length) return;
+    if (!flipped[idx]) {
+      const nf=[...flipped]; nf[idx]=true; setFlipped(nf);
+      const np=[...phases]; np[idx]='A'; setPhases(np);
+    } else {
+      const cur = phases[idx];
+      const np=[...phases];
+      if (cur==='A') { np[idx]='B'; setPhases(np); }
+      else if (cur==='B') {
+        np[idx]='C'; setPhases(np);
+        // wow background for ultra/shiny/gold
+        setTimeout(()=> {
+          if (revealedCount+1 >= pulledCards.length) setPackState('FINISHED');
+          else { setActive(idx+1); setRevealedCount(c=>c+1); }
+        }, 700);
+        if (cur==='B') setRevealedCount(c=> c); // keep
+      } else if (cur==='C') {
+        // already revealed, go next
+        if (idx+1 < pulledCards.length) { setActive(idx+1); }
       }
     }
   };
 
-  const packTypeLabels: Record<string, string> = {
-    STANDARD: 'Standard',
-    PREMIUM: 'Premium',
-    WELCOME: 'Bienvenue',
+  // tap progression: A -> B -> C via same tap. Simplify: second tap goes B, third tap goes C and advances pile
+  const handlePileTap = () => {
+    if (packState!=='PILE') return;
+    const idx = active;
+    const cur = phases[idx];
+    if (!flipped[idx]) {
+      const nf=[...flipped]; nf[idx]=true; setFlipped(nf);
+      const np=[...phases]; np[idx]='A'; setPhases(np);
+    } else if (cur==='A') {
+      const np=[...phases]; np[idx]='B'; setPhases(np);
+    } else if (cur==='B') {
+      const np=[...phases]; np[idx]='C'; setPhases(np);
+      setTimeout(()=>{
+        if (idx === pulledCards.length-1) setPackState('FINISHED');
+        else setActive(idx+1);
+      }, 650);
+    } else if (cur==='C') {
+      if (idx < pulledCards.length-1) setActive(idx+1);
+    }
   };
+
+  const packLabels: Record<string,string> = { STANDARD:'Standard', PREMIUM:'Premium', WELCOME:'Bienvenue' };
 
   return (
     <main className={styles.openPackPage}>
-      {/* Header */}
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={() => router.push('/')}>
-          ←
-        </button>
+        <button className={styles.backBtn} onClick={()=>router.push('/')}>←</button>
         <div className={styles.headerTitle}>Ouvrir un Booster</div>
       </header>
 
-      {/* Stage */}
-      <div className={styles.stage}>
+      <div className={styles.stage} onClick={packState==='PILE' ? handlePileTap : undefined}>
         <div className={styles.spotlight} />
 
-        {/* State: Select Pack */}
-        {packState === 'SELECTING' && (
+        {packState==='SELECTING' && (
           <div className={styles.packSelection}>
             <h2 className={styles.selectionTitle}>Choisis ton booster</h2>
             {error && <div className={styles.error}>{error}</div>}
-            {packs.length === 0 ? (
-              <div className={styles.emptyState}>
-                <p>Aucun booster disponible.</p>
-                <p className={styles.emptySub}>Les admins peuvent t'en donner via le panel d'administration.</p>
-              </div>
-            ) : (
+            {packs.length===0 ? <div className={styles.emptyState}><p>Aucun booster disponible.</p><p className={styles.emptySub}>Demande à un admin via /admin</p></div> : (
               <div className={styles.packList}>
-                {packs.map(pack => (
-                  <button
-                    key={pack.id}
-                    className={`${styles.packOption} ${selectedPackId === pack.id ? styles.selected : ''}`}
-                    onClick={() => setSelectedPackId(pack.id)}
-                    disabled={loading}
-                  >
+                {packs.map(p=>(
+                  <button key={p.id} className={`${styles.packOption} ${selectedPackId===p.id?styles.selected:''}`} onClick={()=>setSelectedPackId(p.id)} disabled={loading}>
                     <div className={styles.optionIcon}>🃏</div>
-                    <div className={styles.optionInfo}>
-                      <div className={styles.optionTitle}>{packTypeLabels[pack.packType]}</div>
-                      <div className={styles.optionId}>#{pack.id.slice(0, 8)}...</div>
-                    </div>
-                    {selectedPackId === pack.id && <div className={styles.checkmark}>✓</div>}
+                    <div className={styles.optionInfo}><div className={styles.optionTitle}>{packLabels[p.packType]}</div><div className={styles.optionId}>#{p.id.slice(0,8)}</div></div>
+                    {selectedPackId===p.id && <div className={styles.checkmark}>✓</div>}
                   </button>
                 ))}
               </div>
             )}
-            {selectedPackId && (
-              <button 
-                className={`${styles.openBtn} ${loading ? styles.loading : ''}`}
-                onClick={handleOpenPack}
-                disabled={loading}
-              >
-                {loading ? 'Ouverture...' : 'Ouvrir ce booster'}
-              </button>
-            )}
+            {selectedPackId && <button className={styles.openBtn} onClick={handleOpenPack} disabled={loading}>{loading?'Ouverture...':'Ouvrir ce booster'}</button>}
           </div>
         )}
 
-        {/* State 1: The Pack Tearing */}
-        {(packState === 'TEARING') && (
+        {packState==='TEARING' && (
           <div className={`${styles.packContainer} ${styles.packTearing}`}>
-            <div className={styles.boosterPack}>
-              <div className={styles.packLogo}>🃏</div>
-              <div className={styles.packTitle}>Standard</div>
-              <div className={styles.packInstruction}>Ouverture en cours...</div>
-            </div>
+            <div className={styles.boosterPack}><div className={styles.packLogo}>🃏</div><div className={styles.packTitle}>Standard</div><div className={styles.packInstruction}>Ouverture...</div></div>
           </div>
         )}
 
-        {/* State 2 & 3: Distributed Cards & Revealing */}
-        {(packState === 'DISTRIBUTED' || packState === 'REVEALING' || packState === 'FINISHED') && (
-          <div className={styles.cardsContainer}>
-            {pulledCards.map((pull, i) => (
-              <div 
-                key={pull.instanceId} 
-                className={`${styles.cardSlot} ${styles.visible}`}
-                style={{
-                  zIndex: activeCardIndex === i ? 50 : 1,
-                  transform: activeCardIndex === i ? 'scale(1.1) translateY(-20px)' : '',
-                  opacity: (activeCardIndex !== null && activeCardIndex !== i && revealPhases[activeCardIndex] !== 'C') ? 0.4 : 1,
-                  transition: 'all 0.4s ease'
-                }}
-              >
-                <CardFrame
-                  card={pull.card}
-                  rarity={pull.rarity}
-                  mintNumber={pull.mintNumber}
-                  maxMint={pull.maxMint}
-                  isFlipped={flippedCards[i]}
-                  revealPhase={revealPhases[i]}
-                  onClick={() => handleCardClick(i)}
-                />
+        {packState==='PILE' && (
+          <>
+            <div className={styles.pileContainer}>
+              {pulledCards.map((pull,i)=>{
+                const isActive = i===active;
+                const isDone = phases[i]==='C';
+                const isBehind = i < active;
+                // pile offsets
+                const offset = isBehind ? (active - i)*14 : 0;
+                return (
+                  <div
+                    key={pull.instanceId}
+                    className={`${styles.pileCard} ${isActive?styles.pileActive:''} ${isDone?styles.pileDone:''} ${isBehind?styles.pileBehind:''}`}
+                    style={{
+                      zIndex: isActive ? 20 : 10 - i,
+                      transform: isBehind
+                        ? `translateX(${-offset*8}px) translateY(${offset*2}px) rotate(${-4+ i*2}deg) scale(0.92)`
+                        : isActive
+                          ? `translate(-50%,-50%) scale(1.06)`
+                          : `translate(-50%,-50%) translateX(${ (i-active)*18}px) rotate(${(i-active)*4}deg)`,
+                      opacity: isBehind ? 0.85 : 1,
+                    }}
+                    onClick={e=>{ e.stopPropagation(); if(isActive) handlePileTap(); }}
+                  >
+                    <CardFrame
+                      card={pull.card}
+                      rarity={pull.rarity}
+                      mintNumber={pull.mintNumber}
+                      maxMint={pull.maxMint}
+                      isFlipped={flipped[i]}
+                      revealPhase={phases[i]}
+                      onClick={isActive ? handlePileTap : undefined}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div className={styles.tapHint}>
+              { !flipped[active] ? 'Tape pour révéler →' : phases[active]==='A' ? 'Tape → stats' : phases[active]==='B' ? 'Tape → illustration ✨' : active < pulledCards.length-1 ? 'Tape pour carte suivante' : 'Dernière carte !'}
+            </div>
+          </>
+        )}
+
+        {packState==='FINISHED' && (
+          <div className={styles.finishedGrid}>
+            {pulledCards.map(p=>(
+              <div key={p.instanceId} className={styles.finishedCard}>
+                <CardFrame card={p.card} rarity={p.rarity} mintNumber={p.mintNumber} maxMint={p.maxMint} isFlipped revealPhase="C" size="small" />
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Controls */}
       <div className={styles.controls}>
-        {packState === 'DISTRIBUTED' && flippedCards.every(f => !f) && (
-          <div className={styles.instructionText}>
-            Touche une carte pour la révéler...
-          </div>
-        )}
-
-        {packState === 'REVEALING' && activeCardIndex !== null && revealPhases[activeCardIndex] !== 'C' && (
-          <button className={styles.nextBtn} onClick={handleNextPhase}>
-            Continuer la révélation
-          </button>
-        )}
-
-        {packState === 'FINISHED' && (
-          <button className={styles.finishBtn} onClick={() => router.push('/collection')}>
-            Aller à la collection
-          </button>
-        )}
+        {packState==='FINISHED' && <button className={styles.finishBtn} onClick={()=>router.push('/collection')}>Voir la collection</button>}
+        {packState==='PILE' && <div style={{fontSize:'0.75rem',color:'rgba(255,255,255,0.5)'}}>{active+1} / {pulledCards.length}</div>}
       </div>
     </main>
   );

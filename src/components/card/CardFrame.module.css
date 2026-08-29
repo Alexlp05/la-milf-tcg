@@ -99,7 +99,17 @@
 
 .frameUltraRare {
   border-color: #9b59b6;
-  box-shadow: inset 0 0 15px rgba(155, 89, 182, 0.15);
+  box-shadow: inset 0 0 15px rgba(155, 89, 182, 0.2), 0 0 18px rgba(155, 89, 182, 0.25);
+  position: relative;
+}
+.frameUltraRare::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 14px;
+  background: linear-gradient(120deg, rgba(155,89,182,0.15), transparent 40%, rgba(60,180,255,0.12));
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
 
 .frameShiny {
@@ -316,8 +326,39 @@
 }
 
 /* ==========================================
-   SHINY EFFECT OVERLAY
-   ========================================== */
+    HOLO / SHINY / GOLD / ULTRA OVERLAYS
+    Pokémon-style granuleux + rainbow
+    Utilise --mx/--my (0-100) pour le tilt
+    ========================================== */
+.ultraOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.ultraOverlay::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse at calc(var(--mx,50)*1%) calc(var(--my,50)*1%), rgba(155,89,182,0.45) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 80%, rgba(60,180,255,0.25) 0%, transparent 50%),
+    linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.18) 45%, transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+.ultraOverlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
 .shinyOverlay {
   position: absolute;
   inset: 0;
@@ -326,26 +367,28 @@
   border-radius: 14px;
   overflow: hidden;
 }
-
 .shinyOverlay::before {
   content: '';
   position: absolute;
+  inset: -30%;
+  background:
+    linear-gradient(105deg, transparent 15%, rgba(255,0,128,0.22) 25%, rgba(0,220,255,0.22) 35%, rgba(255,240,0,0.22) 45%, rgba(120,90,255,0.22) 55%, transparent 70%),
+    linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.55) 40%, transparent 60%);
+  background-size: 200% 100%, 200% 100%;
+  background-position: calc(var(--mx,50)*1% + calc(var(--my,50)*0.5%)) 50%, calc((100 - var(--mx,50))*1%) 50%;
+  mix-blend-mode: color-dodge;
+  opacity: 0.95;
+  animation: holoShift 2.8s linear infinite;
+}
+.shinyOverlay::after {
+  content: '';
+  position: absolute;
   inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.1) 30%,
-    rgba(201, 168, 76, 0.15) 40%,
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 60%
-  );
-  background-size: 200% 200%;
-  animation: shimmer 3s ease-in-out infinite;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.45;
 }
 
-/* ==========================================
-   GOLD EFFECT OVERLAY
-   ========================================== */
 .goldOverlay {
   position: absolute;
   inset: 0;
@@ -354,30 +397,57 @@
   border-radius: 14px;
   overflow: hidden;
 }
-
 .goldOverlay::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 15%,
-    rgba(255, 215, 0, 0.08) 25%,
-    rgba(255, 255, 255, 0.15) 35%,
-    rgba(255, 215, 0, 0.12) 45%,
-    rgba(255, 255, 255, 0.2) 55%,
-    transparent 65%
-  );
-  background-size: 200% 200%;
-  animation: shimmer 2.5s ease-in-out infinite;
+  inset: -30%;
+  background:
+    linear-gradient(110deg, transparent 20%, rgba(255,215,0,0.55) 30%, rgba(255,255,255,0.7) 38%, rgba(255,180,0,0.45) 45%, transparent 60%),
+    radial-gradient(ellipse at calc(var(--mx,50)*1%) calc(var(--my,50)*1%), rgba(255,255,255,0.55) 0%, transparent 35%);
+  background-size: 200% 100%, 100% 100%;
+  mix-blend-mode: color-dodge;
+  animation: holoShift 2.2s linear infinite;
 }
-
 .goldOverlay::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 215, 0, 0.04);
-  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  opacity: 0.6;
+}
+.goldOverlay i {
+  position: absolute;
+  width: 6px; height: 6px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 8px white;
+  opacity: 0.9;
+  animation: sparkle 1.8s ease-in-out infinite;
+}
+.goldOverlay i:nth-child(1){ left:20%; top:30%; animation-delay:0s}
+.goldOverlay i:nth-child(2){ left:70%; top:22%; animation-delay:0.4s}
+.goldOverlay i:nth-child(3){ left:55%; top:75%; animation-delay:0.8s}
+
+@keyframes holoShift {
+  0% { background-position: -50% 50%, 50% 50%; }
+  100% { background-position: 150% 50%, 50% 50%; }
+}
+@keyframes sparkle {
+  0%,100% { transform: scale(0.6); opacity: 0.4; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+/* Tilt interaction */
+.cardWrapper[data-tilt="1"] {
+  --mx: 50;
+  --my: 50;
+}
+.cardWrapper[data-tilt="1"] .cardInner {
+  transform: rotateY(calc((var(--mx) - 50) * 0.18deg)) rotateX(calc((50 - var(--my)) * 0.18deg));
+}
+.cardWrapper[data-tilt="1"].cardFlipped .cardInner {
+  transform: rotateY(180deg) rotateY(calc((var(--mx) - 50) * 0.18deg)) rotateX(calc((50 - var(--my)) * 0.18deg));
 }
 
 /* ==========================================

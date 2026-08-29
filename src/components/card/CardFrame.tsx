@@ -42,6 +42,15 @@ export default function CardFrame({
   size = 'normal',
   onClick,
 }: CardFrameProps) {
+  const [tilt, setTilt] = React.useState({ x: 50, y: 50 });
+  const isHolo = rarity === 'SHINY' || rarity === 'GOLD' || rarity === 'ULTRA_RARE';
+  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isHolo || size === 'small') return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setTilt({ x, y });
+  };
   // Helper to get CSS classes based on rarity
   const getRarityClass = (prefix: string) => {
     switch (rarity) {
@@ -85,25 +94,24 @@ export default function CardFrame({
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={wrapperClasses} onClick={onClick}>
+    <div
+      className={wrapperClasses}
+      onClick={onClick}
+      onMouseMove={handleMove}
+      data-tilt={isHolo ? '1' : '0'}
+      style={isHolo ? ({ ['--mx' as any]: tilt.x, ['--my' as any]: tilt.y } as React.CSSProperties) : undefined}
+    >
       <div className={styles.cardInner}>
-        {/* ==========================================
-            CARD BACK (Face Down)
-            ========================================== */}
         <div className={styles.cardBack}>
           <div className={styles.cardBackLogo}>🃏</div>
         </div>
 
-        {/* ==========================================
-            CARD FRONT (Face Up)
-            ========================================== */}
         <div className={frontClasses}>
-          {/* Card Border/Frame */}
           <div className={`${styles.cardFrame} ${getRarityClass('frame')}`} />
 
-          {/* Shiny/Gold overlays */}
+          {rarity === 'ULTRA_RARE' && <div className={styles.ultraOverlay} />}
           {rarity === 'SHINY' && <div className={styles.shinyOverlay} />}
-          {rarity === 'GOLD' && <div className={styles.goldOverlay} />}
+          {rarity === 'GOLD' && <div className={styles.goldOverlay}><i/><i/><i/></div>}
 
           {/* Header (Phase A) */}
           <div className={styles.cardHeader}>
