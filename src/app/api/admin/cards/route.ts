@@ -41,7 +41,7 @@ export async function GET() {
   return NextResponse.json({ cards: stock, totals });
 }
 
-// POST create new card (+ 5 scarcity rows)
+// POST create new card (+ scarcity only for existing variants)
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin();
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -61,18 +61,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // scarcity: { COMMUNE, RARE, ULTRA_RARE, SHINY, GOLD } -> maxSupply (null or number)
-    const rarities: [string, number | null][] = [
-      ['COMMUNE', scarcity?.COMMUNE ?? null],
-      ['RARE', scarcity?.RARE ?? null],
-      ['ULTRA_RARE', scarcity?.ULTRA_RARE ?? 20],
-      ['SHINY', scarcity?.SHINY ?? 3],
-      ['GOLD', scarcity?.GOLD ?? 1],
+    // scarcity: { COMMUNE: null|number, RARE: ... } ; absent key or undefined = variante n'existe pas (pas de ligne)
+    // null = illimité, number = limité, undefined = n'existe pas
+    const rarities: [string, any][] = [
+      ['COMMUNE', scarcity?.COMMUNE],
+      ['RARE', scarcity?.RARE],
+      ['ULTRA_RARE', scarcity?.ULTRA_RARE],
+      ['SHINY', scarcity?.SHINY],
+      ['GOLD', scarcity?.GOLD],
     ];
 
-    for (const [rarity, maxSupply] of rarities) {
+    for (const [rarity, val] of rarities) {
+      if (val === undefined || val === 'NONE') continue; // n'existe pas
+      const maxSupply = val === null || val === '' ? null : Number(val);
       await prisma.cardScarcity.create({
-        data: { cardId: id, rarity: rarity as any, maxSupply: maxSupply === null || maxSupply === undefined ? null : Number(maxSupply), currentSupply: 0 },
+        data: { cardId: id, rarity: rarity as any, maxSupply, currentSupply: 0 },
       });
     }
 
@@ -102,11 +105,21 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (scarcity) {
-      for (const [rarity, maxSupply] of Object.entries(scarcity)) {
-        await prisma.cardScarcity.update({
-          where: { cardId_rarity: { cardId: id, rarity: rarity as any } },
-          data: { maxSupply: maxSupply === null ? null : Number(maxSupply as any) },
-        });
+      for (const [rarity, val] of Object.entries(scarcity as any)) {
+        if (val === 'NONE') {
+          const existing = await prisma.cardScarcity.findUnique({ where: { cardId_rarity: { cardId: id, rarity: rarity as any } } });
+          if (existing && existing.currentSupply > 0) return NextResponse.json({ error: `Impossible de supprimer ${rarity} : ${existing.currentSupply} déjà distribués` }, { status: 400 });
+          await prisma.cardScarcity.deleteMany({ where: { cardId: id, rarity: rarity as any } });
+        } else if (val === undefined) {
+          continue;
+        } else {
+          const maxSupply = val === null || val === '' ? null : Number(val as any);
+          await prisma.cardScarcity.upsert({
+            where: { cardId_rarity: { cardId: id, rarity: rarity as any } },
+            update: { maxSupply },
+            create: { cardId: id, rarity: rarity as any, maxSupply, currentSupply: 0 },
+          });
+        }
       }
     }
 

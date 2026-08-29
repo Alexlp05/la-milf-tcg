@@ -107,7 +107,11 @@ export default function AdminPage() {
     setEditingCard(null); setShowCreate(true);
   };
   const openEdit = (row: CardRow) => {
-    const sc: any = {}; row.scarcity.forEach(s=> sc[s.rarity]= s.maxSupply===null? '' : s.maxSupply);
+    const sc: any = {};
+    for (const k of ['COMMUNE','RARE','ULTRA_RARE','SHINY','GOLD']) {
+      const found = row.scarcity.find(s=> s.rarity===k);
+      sc[k] = found ? (found.maxSupply===null? '' : found.maxSupply) : 'NONE';
+    }
     setForm({ id:row.card.id, name:row.card.name, title:row.card.title, type:row.card.type, overallScore:row.card.overallScore, illustrationUrl:row.card.illustrationUrl||'', iconUrl:row.card.iconUrl||'', actionDescription:row.card.actionDescription, actionValue:row.card.actionValue, loreAlbum:row.card.loreAlbum, scarcity:sc });
     setEditingCard(row); setShowCreate(true);
   };
@@ -120,7 +124,8 @@ export default function AdminPage() {
     };
     for (const k of ['COMMUNE','RARE','ULTRA_RARE','SHINY','GOLD']){
       const v = form.scarcity[k];
-      payload.scarcity[k] = v===''||v===null ? null : Number(v);
+      if (v==='NONE') payload.scarcity[k]='NONE';
+      else payload.scarcity[k] = v===''||v===null ? null : Number(v);
     }
     const method = editingCard ? 'PATCH' : 'POST';
     const body = editingCard ? { id: form.id, fields: { name:form.name, title:form.title, type:form.type, overallScore:Number(form.overallScore), illustrationUrl:form.illustrationUrl||null, iconUrl:form.iconUrl||null, actionDescription:form.actionDescription, actionValue:Number(form.actionValue), loreAlbum:form.loreAlbum }, scarcity: payload.scarcity } : payload;
@@ -271,9 +276,19 @@ export default function AdminPage() {
                     <input type="number" placeholder="Action value" value={form.actionValue} onChange={e=>setForm({...form,actionValue:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
                     <textarea placeholder="Lore album" value={form.loreAlbum} onChange={e=>setForm({...form,loreAlbum:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6,minHeight:60}}/>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                      {['COMMUNE','RARE','ULTRA_RARE','SHINY','GOLD'].map(k=>(
-                        <label key={k} style={{fontSize:'0.8rem'}}>{k} maxSupply (vide=∞)<input placeholder="vide=∞" value={form.scarcity[k]} onChange={e=>setForm({...form, scarcity:{...form.scarcity,[k]:e.target.value}})} style={{width:'100%',padding:6,border:'1px solid #ddd',borderRadius:6,marginTop:2}}/></label>
-                      ))}
+                      {['COMMUNE','RARE','ULTRA_RARE','SHINY','GOLD'].map(k=>{
+                        const exists = form.scarcity[k]!=='NONE';
+                        return (
+                          <div key={k} style={{border:'1px solid #ddd',borderRadius:6,padding:6, background: exists?'white':'#f5f5f5'}}>
+                            <label style={{fontSize:'0.8rem',display:'flex',gap:6,alignItems:'center',fontWeight:700}}>
+                              <input type="checkbox" checked={exists} onChange={e=> setForm({...form, scarcity:{...form.scarcity,[k]: e.target.checked ? '' : 'NONE'}})} />
+                              {k} {exists?'':'— n\'existe pas'}
+                            </label>
+                            {exists && <input placeholder="vide=∞" value={form.scarcity[k]} onChange={e=>setForm({...form, scarcity:{...form.scarcity,[k]:e.target.value}})} style={{width:'100%',padding:6,border:'1px solid #ddd',borderRadius:6,marginTop:4}} />}
+                            {!exists && <div style={{fontSize:'0.7rem',color:'#888',marginTop:4}}>Variante non créée</div>}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className={styles.modalActions} style={{marginTop:12}}><button className={styles.cancelBtn} onClick={()=>setShowCreate(false)}>Annuler</button><button className={styles.confirmBtn} onClick={submitCard}>{editingCard?'Sauvegarder':'Créer'}</button></div>
