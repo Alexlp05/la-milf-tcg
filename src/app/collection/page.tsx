@@ -154,12 +154,14 @@ export default function CollectionPage() {
                 {item.quantity > 1 && (
                   <div className={styles.quantityBadge}>x{item.quantity}</div>
                 )}
-<CardFrame
+ <CardFrame
                 card={item.card}
                 rarity={item.rarity}
                 mintNumber={item.mintNumber ?? undefined}
                 maxMint={item.maxMint ?? undefined}
                 size="small"
+                isFlipped
+                revealPhase="C"
               />
               </div>
             ))
@@ -183,6 +185,8 @@ export default function CollectionPage() {
                 mintNumber={selectedCard.mintNumber ?? undefined}
                 maxMint={selectedCard.maxMint ?? undefined}
                 size="large"
+                isFlipped
+                revealPhase="C"
               />
             </div>
             
