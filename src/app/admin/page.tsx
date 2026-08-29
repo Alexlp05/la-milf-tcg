@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [editingCard, setEditingCard] = useState<CardRow | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<any>({ id:'', name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 } });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated' && (session as any)?.user?.role === 'ADMIN') {
@@ -88,6 +89,19 @@ export default function AdminPage() {
     setActionLoading(null);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('cardId', form.id || `card_${Date.now()}`);
+    const r = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) alert(d.error || 'Upload échoué. Vérifie bucket/keys Supabase.');
+    else setForm((f:any)=>({ ...f, illustrationUrl: d.url }));
+    setUploading(false);
+  };
   const openCreate = () => {
     setForm({ id:`card_${String(cards.length+1).padStart(3,'0')}`, name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 }});
     setEditingCard(null); setShowCreate(true);
@@ -244,7 +258,15 @@ export default function AdminPage() {
                     <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}><option>PERSONNAGE</option><option>OBJET</option><option>LIEU</option><option>SOUVENIR</option><option>REFERENCE</option></select>
                     <input type="number" placeholder="Score 0-100" value={form.overallScore} onChange={e=>setForm({...form,overallScore:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
                     <input placeholder="Illustration URL" value={form.illustrationUrl} onChange={e=>setForm({...form,illustrationUrl:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
-                    {/* iconUrl gardé pour compat mais caché - non utilisé visuellement */}
+                    <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                      <label className="btn" style={{padding:'6px 12px',border:'1px solid #ddd',borderRadius:6,cursor:'pointer',background: uploading?'#eee':'white'}}>
+                        {uploading ? 'Upload...' : '📤 Choisir fichier'}
+                        <input type="file" accept="image/*" onChange={handleFileUpload} style={{display:'none'}} disabled={uploading}/>
+                      </label>
+                      {form.illustrationUrl && <img src={form.illustrationUrl} alt="preview" style={{width:48,height:64,objectFit:'cover',borderRadius:6,border:'1px solid #ddd'}}/>}
+                      <span style={{fontSize:'0.7rem',color:'#888'}}>Recommandé 840×1176 WebP &lt;500KB</span>
+                    </div>
+                    {/* iconUrl caché */}
                     <input placeholder="Action description" value={form.actionDescription} onChange={e=>setForm({...form,actionDescription:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
                     <input type="number" placeholder="Action value" value={form.actionValue} onChange={e=>setForm({...form,actionValue:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6}}/>
                     <textarea placeholder="Lore album" value={form.loreAlbum} onChange={e=>setForm({...form,loreAlbum:e.target.value})} style={{padding:8,border:'1px solid #ddd',borderRadius:6,minHeight:60}}/>
