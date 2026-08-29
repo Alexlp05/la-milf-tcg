@@ -35,7 +35,8 @@ const RARITY_FILTERS: { id: CardRarity; label: string; color: string }[] = [
 
 export default function CollectionPage() {
   const router = useRouter();
-  const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
+  const [activeTypes, setActiveTypes] = useState<CardType[]>([]);
+  const [activeRarities, setActiveRarities] = useState<CardRarity[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('album');
   const [selectedCard, setSelectedCard] = useState<CollectionItem | null>(null);
   const [collection, setCollection] = useState<CollectionItem[]>([]);
@@ -58,50 +59,45 @@ export default function CollectionPage() {
   }, []);
 
   const progress = stats.totalVariants ? Math.round((stats.uniqueCards / stats.totalVariants) * 100) : 0;
+  const toggleType = (t: CardType) => setActiveTypes(prev => prev.includes(t) ? prev.filter(x=>x!==t) : [...prev, t]);
+  const toggleRarity = (r: CardRarity) => setActiveRarities(prev => prev.includes(r) ? prev.filter(x=>x!==r) : [...prev, r]);
+  const clearFilters = () => { setActiveTypes([]); setActiveRarities([]); setSearch(''); };
 
-  const ownedCardIds = new Set(collection.map(c=> c.card.id));
+  const matchesFilters = (cardType: CardType, rarity: CardRarity | null) => {
+    if (activeTypes.length > 0 && !activeTypes.includes(cardType)) return false;
+    if (activeRarities.length > 0 && rarity && !activeRarities.includes(rarity)) return false;
+    return true;
+  };
+
   let display: any[] = [];
   if (viewMode==='cards') {
-    // Album Cartes uniques (8) : possédée si au moins 1 variante possédée
     display = allCards.filter(c=>{
       if(search && !`${c.name} ${c.title} ${c.id}`.toLowerCase().includes(search.toLowerCase())) return false;
-      if(activeFilter!=='ALL' && (c as any).type!==activeFilter) return false;
-      if(RARITY_FILTERS.some(r=> r.id===activeFilter)){
-        // filtre rareté sur vue Cartes : montre carte si elle a une variante de cette rareté (existe)
-        const hasVariant = allVariants.some(v=> v.cardId===c.id && v.rarity===activeFilter);
+      if(activeTypes.length>0 && !activeTypes.includes((c as any).type)) return false;
+      if(activeRarities.length>0){
+        const hasVariant = allVariants.some(v=> v.cardId===c.id && activeRarities.includes(v.rarity));
         if(!hasVariant) return false;
-        // et si on veut seulement possédées avec cette rareté ?
-        // on garde toutes les cartes ayant la variante, grisée si non possédée
       }
       return true;
     }).map(c=>{
       const ownedVariants = collection.filter(col=> col.card.id===c.id);
-      const owned = ownedVariants[0]; // première variante possédée pour aperçu
+      const owned = ownedVariants[0];
       if(ownedVariants.length>0) return {type:'owned', item:owned, allOwned: ownedVariants};
       return {type:'missingCard', card: c};
     });
   } else if (viewMode==='owned') display = collection.filter(item=>{
     if(search && !`${item.card.name} ${item.card.title} ${item.card.id} ${item.rarity}`.toLowerCase().includes(search.toLowerCase())) return false;
-    if(activeFilter==='ALL') return true;
-    if(item.card.type===activeFilter) return true;
-    if(item.rarity===activeFilter) return true;
-    return false;
+    return matchesFilters(item.card.type, item.rarity);
   }).map(item=>({type:'owned', item}));
   else if (viewMode==='missing') {
     display = missingVariants.filter((v:any)=>{
       if(search && !`${v.card.name} ${v.card.title} ${v.card.id} ${v.rarity}`.toLowerCase().includes(search.toLowerCase())) return false;
-      if(activeFilter==='ALL') return true;
-      if((v.card as any).type===activeFilter) return true;
-      if(v.rarity===activeFilter) return true;
-      return false;
+      return matchesFilters((v.card as any).type, v.rarity);
     }).map((v:any)=>({type:'missingVariant', card: v.card, rarity: v.rarity}));
   } else {
-    // album variantes (40)
     display = allVariants.filter((v:any)=>{
       if(search && !`${v.card.name} ${v.card.title} ${v.card.id} ${v.rarity}`.toLowerCase().includes(search.toLowerCase())) return false;
-      if(RARITY_FILTERS.some(r=> r.id===activeFilter) && v.rarity!==activeFilter) return false;
-      if(!RARITY_FILTERS.some(r=> r.id===activeFilter) && activeFilter!=='ALL' && (v.card as any).type!==activeFilter) return false;
-      return true;
+      return matchesFilters((v.card as any).type, v.rarity);
     }).map((v:any)=>{
       const owned = collection.find(col=> col.card.id===v.cardId && col.rarity===v.rarity);
       return owned ? {type:'owned', item:owned} : {type:'missingVariant', card: v.card, rarity: v.rarity};
@@ -183,25 +179,38 @@ export default function CollectionPage() {
         {/* Recherche */}
         <input placeholder="Rechercher nom, titre, card_00x..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:'100%',padding:'10px 14px',borderRadius:999,border:'1px solid rgba(26,22,18,0.12)',marginBottom:12,fontSize:'0.9rem'}}/>
 
-        {/* Filtres Type */}
+        {/* Filtres Type + Rareté multimodaux cumulés */}
         <div style={{marginBottom:8}}>
-          <div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--color-text-muted)',marginBottom:6,letterSpacing:'0.04em'}}>TYPE</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--color-text-muted)',letterSpacing:'0.04em'}}>TYPE {activeTypes.length>0 && `• ${activeTypes.length}`}</div>
+            {activeTypes.length>0 && <button onClick={()=>setActiveTypes([])} style={{fontSize:'0.7rem',color:'var(--color-accent-gold-dark)',textDecoration:'underline',background:'none',border:'none',cursor:'pointer'}}>Effacer</button>}
+          </div>
           <div className={styles.filters} style={{marginBottom:0}}>
-            <button className={`${styles.filterBtn} ${activeFilter==='ALL'?styles.active:''}`} onClick={()=>setActiveFilter('ALL')}>Tout</button>
-            {TYPE_FILTERS.map(f=> <button key={f.id} className={`${styles.filterBtn} ${activeFilter===f.id?styles.active:''}`} onClick={()=>setActiveFilter(f.id)}>{f.icon} {f.label}</button>)}
+            {TYPE_FILTERS.map(f=> {
+              const on = activeTypes.includes(f.id);
+              return <button key={f.id} className={`${styles.filterBtn} ${on?styles.active:''}`} onClick={()=>toggleType(f.id)} style={on?{background:'var(--color-text-primary)',color:'white',borderColor:'var(--color-text-primary)'}:{}}>{f.icon} {f.label} {on?'✓':''}</button>
+            })}
           </div>
         </div>
-        {/* Filtres Rareté */}
-        <div style={{marginBottom:12}}>
-          <div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--color-text-muted)',marginBottom:6,letterSpacing:'0.04em'}}>RARETÉ</div>
+        <div style={{marginBottom:8}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--color-text-muted)',letterSpacing:'0.04em'}}>RARETÉ {activeRarities.length>0 && `• ${activeRarities.length}`}</div>
+            {activeRarities.length>0 && <button onClick={()=>setActiveRarities([])} style={{fontSize:'0.7rem',color:'var(--color-accent-gold-dark)',textDecoration:'underline',background:'none',border:'none',cursor:'pointer'}}>Effacer</button>}
+          </div>
           <div className={styles.filters}>
-            {RARITY_FILTERS.map(f=> (
-              <button key={f.id} className={`${styles.filterBtn} ${activeFilter===f.id?styles.active:''}`} onClick={()=>setActiveFilter(f.id)} style={activeFilter===f.id?{background:f.color,borderColor:f.color,color:'white'}:{borderColor:`${f.color}40`}}>
-                <span style={{width:8,height:8,borderRadius:'50%',background:f.color,display:'inline-block',marginRight:6}}/> {f.label}
-              </button>
-            ))}
+            {RARITY_FILTERS.map(f=> {
+              const on = activeRarities.includes(f.id);
+              return (
+                <button key={f.id} className={`${styles.filterBtn} ${on?styles.active:''}`} onClick={()=>toggleRarity(f.id)} style={on?{background:f.color,borderColor:f.color,color:'white'}:{borderColor:`${f.color}40`}}>
+                  <span style={{width:8,height:8,borderRadius:'50%',background:on?'white':f.color,display:'inline-block',marginRight:6}}/> {f.label} {on?'✓':''}
+                </button>
+              )
+            })}
           </div>
         </div>
+        {(activeTypes.length>0 || activeRarities.length>0 || search) && (
+          <button onClick={clearFilters} style={{width:'100%',padding:'8px',borderRadius:999,border:'1px solid rgba(26,22,18,0.12)',background:'white',fontSize:'0.8rem',marginBottom:12}}>↺ Réinitialiser tous les filtres ({activeTypes.length+activeRarities.length + (search?1:0)})</button>
+        )}
 
         <div className={styles.grid}>
           {display.length===0 ? <div className={styles.emptyState}><p>Aucune carte.</p></div> : display.map((entry:any)=>{
