@@ -207,32 +207,28 @@ export default function CollectionPage() {
           {display.length===0 ? <div className={styles.emptyState}><p>Aucune carte.</p></div> : display.map((entry:any)=>{
             if(entry.type==='missingCard'){
               const c=entry.card as CardData;
-              // montre une variante existante au hasard pour aperçu, ou COMMUNE
-              const anyVariant = allVariants.find(v=> v.cardId===c.id);
               return (
-                <div key={`missCard-${c.id}`} className={styles.cardItem} style={{opacity:0.5}}>
-                  <div style={{position:'relative', filter:'grayscale(1) brightness(0.92)'}}>
-                    <CardFrame card={c} rarity={(anyVariant?.rarity as any) || 'COMMUNE'} size="small" isFlipped revealPhase="C" />
-                    <div style={{position:'absolute',inset:0,background:'rgba(248,246,242,0.72)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:2,border:'2px dashed rgba(26,22,18,0.12)'}}>
-                      <span style={{fontSize:'1.4rem'}}>🔒</span><span style={{fontSize:'0.65rem',fontWeight:800}}>{c.id}</span>
+                <div key={`missCard-${c.id}`} className={styles.cardItem} style={{opacity:0.9}}>
+                  <div style={{position:'relative'}}>
+                    <CardFrame card={c} rarity="COMMUNE" size="small" isFlipped={false} />
+                    <div style={{position:'absolute',inset:0,background:'rgba(17,14,12,0.55)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:4,border:'2px solid rgba(255,255,255,0.12)'}}>
+                      <span style={{fontSize:'1.6rem',filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.6))'}}>🔒</span><span style={{fontSize:'0.7rem',fontWeight:800,color:'white',textShadow:'0 1px 6px rgba(0,0,0,0.8)'}}>{c.id}</span><span style={{fontSize:'0.6rem',color:'rgba(255,255,255,0.7)'}}>Non découverte</span>
                     </div>
                   </div>
-                  <div style={{textAlign:'center',marginTop:6}}><div style={{fontSize:'0.75rem',fontWeight:700}}>{c.name}</div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{c.title}</div></div>
+                  <div style={{textAlign:'center',marginTop:6}}><div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--color-text-muted)'}}>???</div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{c.id}</div></div>
                 </div>
               );
             } else if(entry.type==='missingVariant'){
               const c=entry.card as CardData;
-              const r=entry.rarity as CardRarity;
               return (
-                <div key={`miss-${c.id}-${r}`} className={styles.cardItem} style={{opacity:0.5}}>
-                  <div style={{position:'relative', filter:'grayscale(1) brightness(0.92)'}}>
-                    <CardFrame card={c} rarity={r} size="small" isFlipped revealPhase="C" />
-                    <div style={{position:'absolute',inset:0,background:'rgba(248,246,242,0.72)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:2,border:'2px dashed rgba(26,22,18,0.12)'}}>
-                      <span style={{fontSize:'1.4rem'}}>🔒</span><span style={{fontSize:'0.65rem',fontWeight:800}}>{c.id} {r}</span>
+                <div key={`miss-${c.id}-${entry.rarity}`} className={styles.cardItem} style={{opacity:0.9}}>
+                  <div style={{position:'relative'}}>
+                    <CardFrame card={c} rarity="COMMUNE" size="small" isFlipped={false} />
+                    <div style={{position:'absolute',inset:0,background:'rgba(17,14,12,0.55)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:4,border:'2px solid rgba(255,255,255,0.12)'}}>
+                      <span style={{fontSize:'1.6rem'}}>🔒</span><span style={{fontSize:'0.65rem',fontWeight:800,color:'white'}}>{c.id}</span>
                     </div>
-                    <div style={{position:'absolute',top:-6,right:-6,background:RARITY_FILTERS.find(x=>x.id===r)?.color || '#1a1612',color:'white',fontSize:'0.55rem',padding:'2px 6px',borderRadius:999,fontWeight:700}}>{r}</div>
                   </div>
-                  <div style={{textAlign:'center',marginTop:6}}><div style={{fontSize:'0.75rem',fontWeight:700}}>{c.name}</div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{c.id} • {r}</div></div>
+                  <div style={{textAlign:'center',marginTop:6}}><div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--color-text-muted)'}}>???</div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{c.id} • variante secrète</div></div>
                 </div>
               );
             } else {
