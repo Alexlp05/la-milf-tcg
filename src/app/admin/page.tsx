@@ -41,6 +41,12 @@ export default function AdminPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<any>({ id:'', name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 } });
 
+  useEffect(() => {
+    if (status === 'authenticated' && (session as any)?.user?.role === 'ADMIN') {
+      fetchUsers(); fetchCards(); fetchConfig();
+    }
+  }, [status, session]);
+
   if (status === 'loading') return <div className={styles.loading}>Chargement...</div>;
   if (!session || (session.user as any).role !== 'ADMIN') {
     return (
@@ -51,8 +57,6 @@ export default function AdminPage() {
       </div>
     );
   }
-
-  useEffect(() => { fetchUsers(); fetchCards(); fetchConfig(); }, []);
 
   const fetchUsers = async () => {
     setLoading(true);
