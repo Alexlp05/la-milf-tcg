@@ -23,6 +23,14 @@ async function getSlotWeights(slot: 1 | 2 | 3): Promise<SlotConfig[]> {
     weight: weight as number,
   }));
 }
+async function getPremiumWeights(): Promise<SlotConfig[]> {
+  const weights = await getConfig('PREMIUM_WEIGHTS');
+  if (!weights) return [{ rarity: 'ULTRA_RARE' as Rarity, weight: 60 }, { rarity: 'SHINY' as Rarity, weight: 30 }, { rarity: 'GOLD' as Rarity, weight: 10 }];
+  return Object.entries(weights).map(([rarity, weight]) => ({
+    rarity: rarity as Rarity,
+    weight: weight as number,
+  }));
+}
 
 function pickRarity(weights: SlotConfig[]): Rarity {
   const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
@@ -136,14 +144,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Booster invalide ou déjà ouvert' }, { status: 400 });
     }
 
+    const isPremium = pack.packType === 'PREMIUM';
+    const cardCount = isPremium ? 2 : 3;
     const slot1Weights = await getSlotWeights(1);
     const slot2Weights = await getSlotWeights(2);
     const slot3Weights = await getSlotWeights(3);
+    const premiumWeights = await getPremiumWeights();
 
     const results = [];
 
-    for (let i = 0; i < 3; i++) {
-      const weights = i < 2 ? slot1Weights : slot3Weights;
+    for (let i = 0; i < cardCount; i++) {
+      const weights = isPremium ? premiumWeights : (i < 2 ? slot1Weights : slot3Weights);
       let card: any = null;
       let rarity: Rarity | null = null;
       let attempts = 0;

@@ -116,6 +116,14 @@ const GAME_CONFIG = [
     }),
   },
   {
+    key: 'PREMIUM_WEIGHTS',
+    value: JSON.stringify({
+      ULTRA_RARE: 60,
+      SHINY: 30,
+      GOLD: 10,
+    }),
+  },
+  {
     key: 'DUST_VALUES',
     value: JSON.stringify({
       COMMUNE: 5,

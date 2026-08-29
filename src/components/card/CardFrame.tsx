@@ -43,6 +43,7 @@ export default function CardFrame({
   onClick,
 }: CardFrameProps) {
   const [tilt, setTilt] = React.useState({ x: 50, y: 50 });
+  const [spinning, setSpinning] = React.useState(false);
   const isHolo = rarity === 'SHINY' || rarity === 'GOLD' || rarity === 'ULTRA_RARE';
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isHolo || size === 'small') return;
@@ -51,6 +52,13 @@ export default function CardFrame({
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setTilt({ x, y });
   };
+  React.useEffect(() => {
+    if (isFlipped && isHolo) {
+      setSpinning(true);
+      const t = setTimeout(() => setSpinning(false), 1400);
+      return () => clearTimeout(t);
+    }
+  }, [isFlipped, isHolo]);
   // Helper to get CSS classes based on rarity
   const getRarityClass = (prefix: string) => {
     switch (rarity) {
@@ -85,12 +93,14 @@ export default function CardFrame({
   const wrapperClasses = [
     styles.cardWrapper,
     isFlipped ? styles.cardFlipped : '',
+    spinning ? styles.spinning : '',
     getSizeClass(),
   ].filter(Boolean).join(' ');
 
   const frontClasses = [
     styles.cardFront,
     getRevealClass(),
+    (revealPhase==='C' && rarity==='ULTRA_RARE') ? styles.ultraBg : '',
   ].filter(Boolean).join(' ');
 
   return (

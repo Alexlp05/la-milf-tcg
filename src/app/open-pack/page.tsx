@@ -43,7 +43,7 @@ export default function OpenPackPage() {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error||'Erreur');
       setPulledCards(d.cards);
-      setFlipped([false,false,false]); setPhases(['NONE','NONE','NONE']); setActive(0); setRevealedCount(0);
+      setFlipped(Array(d.cards.length).fill(false)); setPhases(Array(d.cards.length).fill('NONE')); setActive(0); setRevealedCount(0);
       setTimeout(()=> setPackState('PILE'), 1100);
     } catch(e:any){ setError(e.message); setPackState('SELECTING'); }
     finally{ setLoading(false); }
@@ -129,7 +129,7 @@ export default function OpenPackPage() {
 
         {packState==='TEARING' && (
           <div className={`${styles.packContainer} ${styles.packTearing}`}>
-            <div className={styles.boosterPack}><div className={styles.packLogo}>🃏</div><div className={styles.packTitle}>Standard</div><div className={styles.packInstruction}>Ouverture...</div></div>
+            <div className={styles.boosterPack}><div className={styles.packLogo}>🃏</div><div className={styles.packTitle}>{selectedPackId ? packLabels[packs.find(p=>p.id===selectedPackId)?.packType || 'STANDARD'] : 'Standard'}</div><div className={styles.packInstruction}>Ouverture...</div></div>
           </div>
         )}
 
