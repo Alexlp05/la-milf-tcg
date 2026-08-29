@@ -1,0 +1,22 @@
+.shopPage{ min-height:100dvh; background:var(--color-bg-primary); }
+.header{ display:flex; align-items:center; gap:12px; padding:16px 20px; background:rgba(255,255,255,0.9); border-bottom:1px solid rgba(26,22,18,0.08); position:sticky; top:0; z-index:10; backdrop-filter:blur(8px); }
+.backBtn{ width:40px; height:40px; border-radius:50%; background:var(--color-bg-secondary); display:flex; align-items:center; justify-content:center; border:1px solid transparent; }
+.backBtn:hover{ background:white; border-color:rgba(201,168,76,0.3); }
+.headerTitle{ flex:1; font-family:var(--font-display); font-weight:800; font-size:1.2rem; }
+.dustBadge{ background:linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05)); padding:6px 14px; border-radius:999px; font-weight:700; color:var(--color-accent-gold-dark); }
+.content{ max-width:900px; margin:0 auto; padding:24px; }
+.hint{ color:var(--color-text-secondary); margin-bottom:20px; }
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:640px){ .grid{ grid-template-columns:1fr; } }
+.shopCard{ background:white; border-radius:16px; padding:20px; border:1px solid rgba(26,22,18,0.06); box-shadow:var(--shadow-card); display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; }
+.shopCard h3{ font-family:var(--font-display); font-weight:800; }
+.shopCard p{ font-size:0.85rem; color:var(--color-text-secondary); min-height:36px; }
+.cardIcon{ font-size:2.6rem; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.1)); }
+.price{ font-family:var(--font-display); font-weight:800; font-size:1.3rem; color:var(--color-accent-gold-dark); margin:8px 0; }
+.buyBtn{ width:100%; padding:10px; }
+.buyBtn:disabled{ opacity:0.5; cursor:not-allowed; }
+.premium{ background:linear-gradient(135deg, rgba(155,89,182,0.08), rgba(255,215,0,0.06)); border-color:rgba(155,89,182,0.18); }
+.standard{ background:linear-gradient(135deg, rgba(201,168,76,0.06), white); }
+.actions{ display:flex; gap:12px; justify-content:center; margin-top:24px; flex-wrap:wrap; }
+.linkBtn{ padding:8px 16px; border:1px solid rgba(201,168,76,0.25); border-radius:999px; background:white; font-weight:600; }
+.linkBtn:hover{ border-color:var(--color-accent-gold); }

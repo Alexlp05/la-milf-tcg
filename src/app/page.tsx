@@ -114,9 +114,9 @@ export default function HomePage() {
             <Link href="/collection" className={`${styles.quickAction} surface`}>
               <div className={styles.quickActionIcon}>🎴</div><div className={styles.quickActionLabel}>Ma Collection</div>
             </Link>
-            <a href="#" className={`${styles.quickAction} surface`} style={{ opacity: 0.5, pointerEvents: 'none' }}>
-              <div className={styles.quickActionIcon}>🛍️</div><div className={styles.quickActionLabel}>Boutique (bientôt)</div>
-            </a>
+            <Link href="/shop" className={`${styles.quickAction} surface`}>
+              <div className={styles.quickActionIcon}>🛍️</div><div className={styles.quickActionLabel}>Boutique</div>
+            </Link>
           </div>
         </section>
 
@@ -134,7 +134,7 @@ export default function HomePage() {
         <Link href="/" className={`${styles.navItem} ${styles.navItemActive}`}><span className={styles.navIcon}>🏠</span><span className={styles.navLabel}>Accueil</span></Link>
         <Link href="/collection" className={styles.navItem}><span className={styles.navIcon}>🎴</span><span className={styles.navLabel}>Collection</span></Link>
         <Link href="/open-pack" className={styles.navItem}><span className={styles.navIcon}>📦</span><span className={styles.navLabel}>Ouvrir</span></Link>
-        <span className={styles.navItem} style={{ opacity: 0.4 }}><span className={styles.navIcon}>🛍️</span><span className={styles.navLabel}>Boutique</span></span>
+        <Link href="/shop" className={styles.navItem}><span className={styles.navIcon}>🛍️</span><span className={styles.navLabel}>Boutique</span></Link>
       </nav>
     </main>
   );
