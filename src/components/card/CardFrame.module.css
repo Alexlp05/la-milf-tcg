@@ -23,6 +23,11 @@
 .cardFlipped .cardInner {
   transform: rotateY(180deg);
 }
+/* Hide front content when card is face-down (avoid reversed text bleed) */
+.cardWrapper:not(.cardFlipped) .cardFront {
+  visibility: hidden;
+  pointer-events: none;
+}
 
 /* ==========================================
    CARD BACK (face-down state)

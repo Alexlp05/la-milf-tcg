@@ -45,6 +45,10 @@ export async function GET() {
       grouped[key].instances.push(uc.instanceId);
     }
 
+    const allCards = await prisma.card.findMany({ orderBy: { id: 'asc' } });
+    const ownedIds = new Set(userCards.map(u => u.cardId));
+    const missing = allCards.filter(c => !ownedIds.has(c.id));
+
     return NextResponse.json({
       collection: Object.values(grouped),
       stats: {
@@ -55,6 +59,9 @@ export async function GET() {
           return acc;
         }, {} as Record<string, number>),
       },
+      allCards,
+      missing,
+      totalInGame: allCards.length,
     });
   } catch (e: any) {
     console.error('Collection error:', e);
