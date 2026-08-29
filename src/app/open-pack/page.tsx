@@ -89,13 +89,18 @@ export default function OpenPackPage() {
             {error && <div className={styles.error}>{error}</div>}
             {packs.length===0 ? <div className={styles.emptyState}><p>Aucun booster disponible.</p><p className={styles.emptySub}>Demande à un admin via /admin</p></div> : (
               <div className={styles.packList}>
-                {packs.map(p=>(
-                  <button key={p.id} className={`${styles.packOption} ${selectedPackId===p.id?styles.selected:''}`} onClick={()=>setSelectedPackId(p.id)} disabled={loading}>
-                    <div className={styles.optionIcon}>🃏</div>
-                    <div className={styles.optionInfo}><div className={styles.optionTitle}>{packLabels[p.packType]}</div><div className={styles.optionId}>#{p.id.slice(0,8)}</div></div>
-                    {selectedPackId===p.id && <div className={styles.checkmark}>✓</div>}
-                  </button>
-                ))}
+                {packs.map(p=>{
+                  const typeClass = p.packType==='PREMIUM' ? styles.packPremium : p.packType==='WELCOME' ? styles.packWelcome : '';
+                  const meta = p.packType==='PREMIUM' ? '2 cartes • min ULTRA' : p.packType==='WELCOME' ? '3 cartes • offert' : '3 cartes • 70% RARE';
+                  const icon = p.packType==='PREMIUM' ? '👑' : p.packType==='WELCOME' ? '🎁' : '📦';
+                  return (
+                    <button key={p.id} className={`${styles.packOption} ${typeClass} ${selectedPackId===p.id?styles.selected:''}`} onClick={()=>setSelectedPackId(p.id)} disabled={loading}>
+                      <div className={styles.optionIcon}>{icon}</div>
+                      <div className={styles.optionInfo}><div className={styles.optionTitle}>{packLabels[p.packType]}</div><div className={styles.optionId}>#{p.id.slice(0,8)}</div><div className={styles.optionMeta}>{meta}</div></div>
+                      {selectedPackId===p.id ? <div className={styles.checkmark}>✓</div> : <div style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.5)',border:'1px solid rgba(255,255,255,0.2)',padding:'4px 10px',borderRadius:999}}>Choisir</div>}
+                    </button>
+                  );
+                })}
               </div>
             )}
             {selectedPackId && <button className={styles.openBtn} onClick={handleOpenPack} disabled={loading}>{loading?'Ouverture...':'Ouvrir ce booster'}</button>}

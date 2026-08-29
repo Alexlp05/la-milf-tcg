@@ -88,6 +88,12 @@
   transition: all var(--transition-fast);
 }
 
+.filterBtn:hover {
+  border-color: var(--color-accent-gold);
+  color: var(--color-accent-gold-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(201,168,76,0.15);
+}
 .filterBtn.active {
   background: var(--color-accent-gold-dark);
   color: #fff;
