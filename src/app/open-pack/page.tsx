@@ -158,9 +158,7 @@ export default function OpenPackPage() {
                 );
               })}
             </div>
-            <div className={styles.tapHint}>
-              { !flipped[active] ? 'Tape pour révéler →' : phases[active]==='C' && active < pulledCards.length-1 ? 'Carte suivante →' : phases[active]==='C' ? 'Dernière ! Tape pour terminer' : '...'}
-            </div>
+            {/* hint déplacé dans controls pour ne plus masquer l'illustration */}
           </>
         )}
 
@@ -195,8 +193,15 @@ export default function OpenPackPage() {
       </div>
 
       <div className={styles.controls}>
+        {packState==='PILE' && (
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+            <div className={styles.tapHint} style={{position:'static',transform:'none',background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.15)'}}>
+              { !flipped[active] ? 'Tape la carte pour révéler' : phases[active]==='C' && active < pulledCards.length-1 ? 'Carte suivante →' : phases[active]==='C' ? 'Dernière ! Tape pour terminer' : '...'}
+            </div>
+            <span style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.45)'}}>{active+1} / {pulledCards.length}</span>
+          </div>
+        )}
         {packState==='FINISHED' && <button className={styles.finishBtn} onClick={()=>router.push('/collection')}>Voir la collection</button>}
-        {packState==='PILE' && <div style={{fontSize:'0.75rem',color:'rgba(255,255,255,0.5)'}}>{active+1} / {pulledCards.length}</div>}
       </div>
     </main>
   );
