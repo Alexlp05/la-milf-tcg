@@ -41,6 +41,7 @@ export default function AdminPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<any>({ id:'', name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 } });
   const [uploading, setUploading] = useState(false);
+  const [viewColl, setViewColl] = useState<{ user: any, collection: any[] } | null>(null);
 
   useEffect(() => {
     if (status === 'authenticated' && (session as any)?.user?.role === 'ADMIN') {
@@ -144,6 +145,12 @@ export default function AdminPage() {
     const r = await fetch('/api/admin/config',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(config)});
     if (r.ok) alert('Config sauvegardée'); else alert('Erreur');
   };
+  const openCollection = async (user: any) => {
+    const r = await fetch(`/api/admin/collections?userId=${user.id}`);
+    const d = await r.json();
+    if (r.ok) setViewColl({ user, collection: d.collection || [] });
+    else alert(d.error || 'Erreur');
+  };
 
   return (
     <main className={styles.adminPage}>
@@ -171,15 +178,49 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+            {viewColl && (
+              <div className={styles.modalOverlay} onClick={()=>setViewColl(null)}>
+                <div className={styles.modalContent} onClick={e=>e.stopPropagation()} style={{maxWidth:700, maxHeight:'85vh', overflowY:'auto'}}>
+                  <h3>Collection de {viewColl.user.name} — {viewColl.collection.length} variantes</h3>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(120px,1fr))',gap:10,marginTop:12}}>
+                    {viewColl.collection.map((c:any)=>(
+                      <div key={c.instances[0]} style={{border:'1px solid #eee',borderRadius:8,padding:8,textAlign:'center'}}>
+                        <div style={{fontSize:'0.7rem',fontWeight:700,background: c.rarity==='GOLD'?'#daa520':c.rarity==='SHINY'?'#c9a84c':c.rarity==='ULTRA_RARE'?'#9b59b6':c.rarity==='RARE'?'#4a7cc9':'#888',color:'white',borderRadius:4,padding:'2px 4px',display:'inline-block',marginBottom:4}}>{c.rarity}</div>
+                        <div style={{fontWeight:700,fontSize:'0.85rem'}}>{c.card.name}</div>
+                        <div style={{fontSize:'0.7rem',color:'#888'}}>{c.card.id} x{c.quantity}</div>
+                        <div style={{fontSize:'0.7rem'}}>{c.card.title}</div>
+                      </div>
+                    ))}
+                    {viewColl.collection.length===0 && <div style={{gridColumn:'1/-1',textAlign:'center',padding:20,color:'#888'}}>Aucune carte</div>}
+                  </div>
+                  <div className={styles.modalActions}><button className={styles.cancelBtn} onClick={()=>setViewColl(null)}>Fermer</button></div>
+                </div>
+              </div>
+            )}
+            {/* Leaderboard */}
+            <div className="surface" style={{padding:14,marginBottom:14,display:'flex',gap:8,overflowX:'auto'}}>
+              <strong style={{whiteSpace:'nowrap'}}>🏆 Ranking :</strong>
+              {users.slice(0,5).map((u:any,idx)=>(
+                <span key={u.id} style={{whiteSpace:'nowrap',background: idx===0?'#ffd700':idx===1?'#c0c0c0':idx===2?'#cd7f32':'#f0ece4',padding:'4px 8px',borderRadius:999,fontSize:'0.75rem',fontWeight:700}}>
+                  {idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'#' + (idx+1)} {u.name} — {u.stats?.score ?? 0}pts ({u.stats?.byRarity?.ULTRA_RARE||0}U {u.stats?.byRarity?.SHINY||0}S {u.stats?.byRarity?.GOLD||0}G)
+                </span>
+              ))}
+            </div>
             <div className={styles.globalActions}><div className={styles.globalActionsText}><h3>Cadeau Global</h3><p>Offrir des boosters à tous les joueurs approuvés</p></div><button className={`${styles.actionBtn} ${styles.sendPackBtn}`} onClick={()=>setSendPack({userId:'all',type:'STANDARD',count:1})}>🎁 Envoyer à tous</button></div>
             {loading ? <div className={styles.loading}>Chargement...</div> : (
-              <div className={styles.tableContainer}><table className={styles.table}><thead><tr><th>Joueur</th><th>Statut</th><th>Ressources</th><th>Inscrit</th><th>Actions</th></tr></thead>
-                <tbody>{users.map(u=>(
-                  <tr key={u.id}><td><div className={styles.userCell}><div className={styles.userAvatar}>{u.name.charAt(0)}</div><div><span className={styles.userName}>{u.name} {u.role==='ADMIN'&&'👑'}</span><span className={styles.userEmail}>{u.email}</span></div></div></td>
+              <div className={styles.tableContainer}><table className={styles.table}><thead><tr><th>#</th><th>Joueur</th><th>Statut</th><th>Score / Ultra / Shiny / Gold</th><th>Ressources</th><th>Actions</th></tr></thead>
+                <tbody>{users.map((u:any, idx)=>(
+                  <tr key={u.id}><td style={{fontWeight:700, color: idx<3?'#c9a84c':'#888'}}>#{idx+1}</td>
+                    <td><div className={styles.userCell}><div className={styles.userAvatar}>{u.name.charAt(0)}</div><div><span className={styles.userName}>{u.name} {u.role==='ADMIN'&&'👑'}</span><span className={styles.userEmail}>{u.email}</span><div style={{fontSize:'0.7rem',color:'#888'}}>{u.stats?.unique||0} variantes • score {u.stats?.score||0}</div></div></div></td>
                     <td><span className={`${styles.statusBadge} ${u.status==='PENDING'?styles.statusPending:u.status==='APPROVED'?styles.statusApproved:styles.statusBanned}`}>{u.status}</span></td>
+                    <td style={{fontSize:'0.8rem'}}>
+                      <div>⭐ {u.stats?.score||0} pts</div>
+                      <div style={{color:'#9b59b6'}}>◆ {u.stats?.byRarity?.ULTRA_RARE||0} U • ✨ {u.stats?.byRarity?.SHINY||0} S • 👑 {u.stats?.byRarity?.GOLD||0} G</div>
+                      <div style={{fontSize:'0.7rem',color:'#888'}}>C {u.stats?.byRarity?.COMMUNE||0} • R {u.stats?.byRarity?.RARE||0}</div>
+                    </td>
                     <td><div style={{fontSize:'0.85rem'}}>📦 {u._count.boosters} | ✨ {u.dustBalance}</div></td>
-                    <td style={{fontSize:'0.8rem',color:'var(--color-text-muted)'}}>{new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
-                    <td><div className={styles.actionGroup}>
+                    <td><div className={styles.actionGroup} style={{flexWrap:'wrap'}}>
+                      <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={()=>openCollection(u)} style={{background:'#eef2ff',borderColor:'#c7d2fe'}}>👁 Voir</button>
                       {u.status==='PENDING' && <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={()=>handleUserAction(u.id,'approve')}>✓ Approuver</button>}
                       {u.status==='APPROVED' && u.role!=='ADMIN' && <><button className={`${styles.actionBtn} ${styles.sendPackBtn}`} onClick={()=>setSendPack({userId:u.id,type:'STANDARD',count:1})}>+1 Pack</button><button className={`${styles.actionBtn} ${styles.banBtn}`} onClick={()=>handleUserAction(u.id,'ban')}>Bannir</button></>}
                       {u.status==='BANNED' && <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={()=>handleUserAction(u.id,'unban')}>Débannir</button>}

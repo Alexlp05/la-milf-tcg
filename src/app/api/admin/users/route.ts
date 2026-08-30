@@ -23,7 +23,25 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
-  return NextResponse.json({ users });
+  // Enrich with rarity breakdown + score
+  const enriched = await Promise.all(users.map(async (u) => {
+    const cards = await prisma.userCard.findMany({
+      where: { ownerId: u.id, isDusted: false },
+      include: { card: true },
+    });
+    const byRarity: Record<string, number> = {};
+    let score = 0;
+    for (const c of cards) {
+      byRarity[c.pulledRarity] = (byRarity[c.pulledRarity] || 0) + 1;
+      score += c.card.overallScore + (c.pulledRarity==='GOLD'?500:c.pulledRarity==='SHINY'?250:c.pulledRarity==='ULTRA_RARE'?100:c.pulledRarity==='RARE'?25:5);
+    }
+    const unique = new Set(cards.map(c=> `${c.cardId}-${c.pulledRarity}`)).size;
+    return { ...u, stats: { byRarity, score, total: cards.length, unique } };
+  }));
+
+  // ranking by score desc
+  enriched.sort((a,b)=> b.stats.score - a.stats.score);
+  return NextResponse.json({ users: enriched });
 }
 
 export async function PATCH(req: NextRequest) {

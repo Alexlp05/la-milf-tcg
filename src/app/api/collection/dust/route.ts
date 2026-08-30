@@ -28,8 +28,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Déjà recyclée' }, { status: 400 });
     }
 
-    if (userCard.mintNumber && userCard.maxMint && userCard.maxMint <= 5) {
-      return NextResponse.json({ error: 'Impossible de recycler une carte numérotée rare (≤5 exemplaires)' }, { status: 400 });
+    // Autorise tout doublon : vérifie qu'il reste au moins 1 exemplaire de la même variante
+    const sameVariantCount = await prisma.userCard.count({
+      where: { ownerId: session.user.id, cardId: userCard.cardId, pulledRarity: userCard.pulledRarity, isDusted: false },
+    });
+    if (sameVariantCount <= 1) {
+      return NextResponse.json({ error: 'Impossible de recycler ton dernier exemplaire de cette variante' }, { status: 400 });
     }
 
     await prisma.$transaction(async (tx) => {
