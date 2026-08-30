@@ -117,6 +117,9 @@ export default function HomePage() {
             <Link href="/shop" className={`${styles.quickAction} surface`}>
               <div className={styles.quickActionIcon}>🛍️</div><div className={styles.quickActionLabel}>Boutique</div>
             </Link>
+            <Link href="/trades" className={`${styles.quickAction} surface`}>
+              <div className={styles.quickActionIcon}>🤝</div><div className={styles.quickActionLabel}>Échanges</div>
+            </Link>
           </div>
         </section>
 
@@ -135,6 +138,7 @@ export default function HomePage() {
         <Link href="/collection" className={styles.navItem}><span className={styles.navIcon}>🎴</span><span className={styles.navLabel}>Collection</span></Link>
         <Link href="/open-pack" className={styles.navItem}><span className={styles.navIcon}>📦</span><span className={styles.navLabel}>Ouvrir</span></Link>
         <Link href="/shop" className={styles.navItem}><span className={styles.navIcon}>🛍️</span><span className={styles.navLabel}>Boutique</span></Link>
+        <Link href="/trades" className={styles.navItem}><span className={styles.navIcon}>🤝</span><span className={styles.navLabel}>Échanges</span></Link>
       </nav>
     </main>
   );

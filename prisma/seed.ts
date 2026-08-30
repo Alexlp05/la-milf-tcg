@@ -124,6 +124,14 @@ const GAME_CONFIG = [
     }),
   },
   {
+    key: 'TRADE_FEE',
+    value: '500',
+  },
+  {
+    key: 'STANDARD_PACK_COST',
+    value: '100',
+  },
+  {
     key: 'DUST_VALUES',
     value: JSON.stringify({
       COMMUNE: 5,
