@@ -67,3 +67,45 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ user: updated });
 }
+
+export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  if (!userId) return NextResponse.json({ error: 'userId requis' }, { status: 400 });
+  if (userId === auth.user.id) return NextResponse.json({ error: 'Impossible de se supprimer soi-même' }, { status: 400 });
+  const target = await prisma.user.findUnique({ where: { id: userId } });
+  if (!target) return NextResponse.json({ error: 'Non trouvé' }, { status: 404 });
+  await prisma.$transaction(async (tx) => {
+    await tx.userCard.deleteMany({ where: { ownerId: userId } });
+    await tx.boosterPack.deleteMany({ where: { ownerId: userId } });
+    await tx.session.deleteMany({ where: { userId } });
+    await tx.account.deleteMany({ where: { userId } });
+    await tx.user.delete({ where: { id: userId } });
+  });
+  return NextResponse.json({ ok: true });
+}
+
+export async function POST(req: NextRequest) {
+  const auth = await requireAdmin();
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const { userId, action } = await req.json();
+  if (!userId || action !== 'reset') return NextResponse.json({ error: 'action reset requis' }, { status: 400 });
+  if (userId === auth.user.id) return NextResponse.json({ error: 'Impossible de se reset soi-même' }, { status: 400 });
+  // reset: supprime cartes + boosters, dust 0, remet PENDING?
+  await prisma.$transaction(async (tx) => {
+    // libère les stocks limités : décrémente currentSupply pour chaque variante possédée
+    const cards = await tx.userCard.findMany({ where: { ownerId: userId, isDusted: false }, select: { cardId: true, pulledRarity: true } });
+    for (const c of cards) {
+      await tx.cardScarcity.updateMany({
+        where: { cardId: c.cardId, rarity: c.pulledRarity as any },
+        data: { currentSupply: { decrement: 1 } },
+      });
+    }
+    await tx.userCard.deleteMany({ where: { ownerId: userId } });
+    await tx.boosterPack.deleteMany({ where: { ownerId: userId } });
+    await tx.user.update({ where: { id: userId }, data: { dustBalance: 0 } });
+  });
+  return NextResponse.json({ ok: true });
+}

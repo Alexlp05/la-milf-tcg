@@ -29,7 +29,7 @@ export default function OpenPackPage() {
   const [flipped, setFlipped] = useState<boolean[]>([false,false,false]);
   const [phases, setPhases] = useState<RevealPhase[]>(['NONE','NONE','NONE']);
   const [active, setActive] = useState<number>(0);
-  const [revealedCount, setRevealedCount] = useState(0);
+  const [selectedFinished, setSelectedFinished] = useState<PulledCard | null>(null);
 
   useEffect(() => {
     fetch('/api/boosters/open').then(r=>r.json()).then(d=> setPacks(d.packs||[])).catch(()=>{});
@@ -43,7 +43,7 @@ export default function OpenPackPage() {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error||'Erreur');
       setPulledCards(d.cards);
-      setFlipped(Array(d.cards.length).fill(false)); setPhases(Array(d.cards.length).fill('NONE')); setActive(0); setRevealedCount(0);
+      setFlipped(Array(d.cards.length).fill(false)); setPhases(Array(d.cards.length).fill('NONE')); setActive(0); setSelectedFinished(null);
       setTimeout(()=> setPackState('PILE'), 1100);
     } catch(e:any){ setError(e.message); setPackState('SELECTING'); }
     finally{ setLoading(false); }
@@ -144,6 +144,11 @@ export default function OpenPackPage() {
                       revealPhase={phases[i]}
                       onClick={isActive ? handlePileTap : undefined}
                     />
+                    {isActive && flipped[i] && (
+                      <div style={{position:'absolute',bottom:-10,left:'50%',transform:'translateX(-50%)',background:'rgba(0,0,0,0.65)',backdropFilter:'blur(6px)',color:'white',padding:'4px 10px',borderRadius:999,fontSize:'0.7rem',fontWeight:700,border:'1px solid rgba(255,255,255,0.15)',whiteSpace:'nowrap'}}>
+                        {pull.rarity.replace('_',' ')} {pull.mintNumber ? `#${String(pull.mintNumber).padStart(2,'0')}/${pull.maxMint}` : ''}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -155,13 +160,30 @@ export default function OpenPackPage() {
         )}
 
         {packState==='FINISHED' && (
-          <div className={styles.finishedGrid}>
-            {pulledCards.map(p=>(
-              <div key={p.instanceId} className={styles.finishedCard}>
-                <CardFrame card={p.card} rarity={p.rarity} mintNumber={p.mintNumber} maxMint={p.maxMint} isFlipped revealPhase="C" size="small" />
+          <>
+            <div className={styles.finishedGrid}>
+              {pulledCards.map(p=>(
+                <div key={p.instanceId} className={styles.finishedCard} onClick={()=>setSelectedFinished(p)} style={{cursor:'pointer'}}>
+                  <CardFrame card={p.card} rarity={p.rarity} mintNumber={p.mintNumber} maxMint={p.maxMint} isFlipped revealPhase="C" size="small" />
+                </div>
+              ))}
+            </div>
+            {selectedFinished && (
+              <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100,padding:16}} onClick={()=>setSelectedFinished(null)}>
+                <div onClick={e=>e.stopPropagation()} style={{display:'flex',gap:16,background:'var(--color-bg-primary)',borderRadius:16,padding:16,maxWidth:760,width:'100%',maxHeight:'90vh',overflow:'auto'}}>
+                  <div style={{flex:1,display:'flex',justifyContent:'center'}}><CardFrame card={selectedFinished.card} rarity={selectedFinished.rarity} mintNumber={selectedFinished.mintNumber} maxMint={selectedFinished.maxMint} size="large" isFlipped revealPhase="C" /></div>
+                  <div style={{flex:1,padding:12}}>
+                    <div style={{fontSize:'0.75rem',fontWeight:700,background: selectedFinished.rarity==='GOLD'?'#daa520':selectedFinished.rarity==='SHINY'?'#c9a84c':selectedFinished.rarity==='ULTRA_RARE'?'#9b59b6':'#888',color:'white',display:'inline-block',padding:'4px 8px',borderRadius:999}}>{selectedFinished.rarity}</div>
+                    <h2 style={{fontFamily:'var(--font-display)',fontSize:'1.6rem',marginTop:8}}>{selectedFinished.card.name}</h2>
+                    <p style={{color:'var(--color-text-secondary)',fontStyle:'italic'}}>{selectedFinished.card.title} — {selectedFinished.card.id}</p>
+                    <p style={{marginTop:12,fontSize:'0.9rem'}}>{selectedFinished.card.actionDescription} <strong>({selectedFinished.card.actionValue})</strong></p>
+                    <div style={{marginTop:12,background:'white',padding:12,borderRadius:8,border:'1px solid rgba(201,168,76,0.15)'}}><div style={{fontSize:'0.75rem',fontWeight:700,color:'var(--color-accent-gold-dark)'}}>📜 Lore</div><div style={{fontSize:'0.9rem',marginTop:4}}>{selectedFinished.card.loreAlbum}</div></div>
+                    <button onClick={()=>setSelectedFinished(null)} style={{marginTop:12,padding:'8px 16px',borderRadius:999,border:'1px solid #ddd',background:'white',cursor:'pointer'}}>Fermer</button>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 

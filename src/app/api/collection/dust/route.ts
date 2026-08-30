@@ -46,6 +46,12 @@ export async function POST(req: NextRequest) {
         where: { id: session.user.id },
         data: { dustBalance: { increment: userCard.dustValue } },
       });
+
+      // Retour pool : libère le numéro pour qu'il soit retirable
+      await tx.cardScarcity.updateMany({
+        where: { cardId: userCard.cardId, rarity: userCard.pulledRarity as any },
+        data: { currentSupply: { decrement: 1 } },
+      });
     });
 
     return NextResponse.json({ dustGained: userCard.dustValue });

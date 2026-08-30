@@ -145,6 +145,18 @@ export default function AdminPage() {
     const r = await fetch('/api/admin/config',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(config)});
     if (r.ok) alert('Config sauvegardée'); else alert('Erreur');
   };
+  const handleDeleteUser = async (userId: string) => {
+    if(!confirm('Supprimer définitivement ce compte ?')) return;
+    const r = await fetch(`/api/admin/users?userId=${userId}`,{method:'DELETE'});
+    const d = await r.json();
+    if(!r.ok) alert(d.error); else { alert('Compte supprimé'); fetchUsers(); }
+  };
+  const handleResetUser = async (userId: string) => {
+    if(!confirm('Remettre à 0 : supprime toutes ses cartes/boosters et remet poussière à 0, et libère les stocks ?')) return;
+    const r = await fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId, action:'reset'})});
+    const d = await r.json();
+    if(!r.ok) alert(d.error); else { alert('Compte remis à 0'); fetchUsers(); }
+  };
   const openCollection = async (user: any) => {
     const r = await fetch(`/api/admin/collections?userId=${user.id}`);
     const d = await r.json();
@@ -224,6 +236,8 @@ export default function AdminPage() {
                       {u.status==='PENDING' && <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={()=>handleUserAction(u.id,'approve')}>✓ Approuver</button>}
                       {u.status==='APPROVED' && u.role!=='ADMIN' && <><button className={`${styles.actionBtn} ${styles.sendPackBtn}`} onClick={()=>setSendPack({userId:u.id,type:'STANDARD',count:1})}>+1 Pack</button><button className={`${styles.actionBtn} ${styles.banBtn}`} onClick={()=>handleUserAction(u.id,'ban')}>Bannir</button></>}
                       {u.status==='BANNED' && <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={()=>handleUserAction(u.id,'unban')}>Débannir</button>}
+                      <button className={`${styles.actionBtn}`} onClick={()=>handleResetUser(u.id)} style={{background:'#fff7ed',borderColor:'#fed7aa',color:'#9a3412'}}>↺ Reset</button>
+                      <button className={`${styles.actionBtn}`} onClick={()=>handleDeleteUser(u.id)} style={{background:'#fef2f2',borderColor:'#fecaca',color:'#b91c1c'}}>🗑 Suppr</button>
                     </div></td></tr>
                 ))}</tbody></table></div>
             )}

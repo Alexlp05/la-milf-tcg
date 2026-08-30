@@ -45,6 +45,8 @@ model User {
   boosters     BoosterPack[]
   accounts     Account[]
   sessions     Session[]
+  tradesFrom   Trade[] @relation("TradeFrom")
+  tradesTo     Trade[] @relation("TradeTo")
 
   @@map("users")
 }
@@ -196,6 +198,34 @@ model BoosterPack {
   owner User @relation(fields: [ownerId], references: [id])
 
   @@map("booster_packs")
+}
+
+// ==========================================
+// TRADING (P2P, coûteuse en poussière)
+// ==========================================
+
+enum TradeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+model Trade {
+  id                  String      @id @default(uuid())
+  fromUserId          String      @map("from_user_id")
+  toUserId            String      @map("to_user_id")
+  offeredInstanceId   String      @map("offered_instance_id")
+  requestedInstanceId String?     @map("requested_instance_id")
+  dustFee             Int         @default(500) @map("dust_fee")
+  status              TradeStatus @default(PENDING)
+  createdAt           DateTime    @default(now()) @map("created_at")
+  decidedAt           DateTime?   @map("decided_at")
+
+  fromUser User @relation("TradeFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("TradeTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@map("trades")
 }
 
 // ==========================================
