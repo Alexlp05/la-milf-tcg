@@ -42,7 +42,7 @@ function pickRarity(weights: SlotConfig[]): Rarity {
   return weights[weights.length - 1].rarity;
 }
 
-async function pickCardForRarity(rarity: Rarity): Promise<{ id: string; name: string; title: string; type: string; overallScore: number; actionDescription: string; actionValue: number; illustrationUrl: string | null; iconUrl: string | null; loreAlbum: string } | null> {
+async function pickCardForRarity(rarity: Rarity): Promise<{ id: string; name: string; title: string; type: string; overallScore: number; actionDescription: string; actionValue: number; illustrationUrl: string | null; iconUrl: string | null; loreAlbum: string; variantIllustrationUrl: string | null; isNew?: boolean } | null> {
   const scarcityEntries = await prisma.cardScarcity.findMany({
     where: { rarity },
     include: { card: true },
@@ -62,9 +62,10 @@ async function pickCardForRarity(rarity: Rarity): Promise<{ id: string; name: st
     overallScore: picked.card.overallScore,
     actionDescription: picked.card.actionDescription,
     actionValue: picked.card.actionValue,
-    illustrationUrl: picked.card.illustrationUrl,
+    illustrationUrl: (picked as any).illustrationUrl || picked.card.illustrationUrl,
     iconUrl: picked.card.iconUrl,
     loreAlbum: picked.card.loreAlbum,
+    variantIllustrationUrl: (picked as any).illustrationUrl || null,
   };
 }
 
@@ -151,6 +152,10 @@ export async function POST(req: NextRequest) {
     const slot3Weights = await getSlotWeights(3);
     const premiumWeights = await getPremiumWeights();
 
+    // Pré-calcul isNew : variantes déjà possédées avant ouverture
+    const existingKeys = new Set((await prisma.userCard.findMany({ where: { ownerId: user.id, isDusted: false }, select: { cardId: true, pulledRarity: true } })).map(c=> `${c.cardId}-${c.pulledRarity}`));
+    const existingCardIds = new Set((await prisma.userCard.findMany({ where: { ownerId: user.id, isDusted: false }, select: { cardId: true } })).map(c=> c.cardId));
+
     const results = [];
 
     for (let i = 0; i < cardCount; i++) {
@@ -170,6 +175,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Impossible de générer les cartes (stock épuisé)' }, { status: 500 });
       }
 
+      const key = `${card.id}-${rarity}`;
+      const isNewVariant = !existingKeys.has(key);
+      const isNewCard = !existingCardIds.has(card.id);
+      // ajoute à set pour que le 2e tirage du même pack détecte doublon intra-pack comme isNew false si déjà tiré dans ce pack
+      existingKeys.add(key); existingCardIds.add(card.id);
+
       const claimed = await claimCard(card.id, rarity, user.id);
       results.push({
         instanceId: claimed.userCard.instanceId,
@@ -184,11 +195,14 @@ export async function POST(req: NextRequest) {
           illustrationUrl: card.illustrationUrl,
           iconUrl: card.iconUrl,
           loreAlbum: card.loreAlbum,
+          variantIllustrationUrl: card.variantIllustrationUrl,
         },
         rarity,
         mintNumber: claimed.mintNumber,
         maxMint: claimed.maxMint,
         dustValue: claimed.dustValue,
+        isNewVariant,
+        isNewCard,
       });
     }
 

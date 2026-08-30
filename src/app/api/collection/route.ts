@@ -18,6 +18,15 @@ export async function GET() {
       orderBy: { acquiredAt: 'desc' },
     });
 
+    // Toutes les variantes (carte × rareté) = 8 × 5 = 40 à collectionner
+    const allVariants = await prisma.cardScarcity.findMany({
+      include: { card: true },
+      orderBy: [{ cardId: 'asc' }, { rarity: 'asc' }],
+    });
+    const allCards = await prisma.card.findMany({ orderBy: { id: 'asc' } });
+
+    const variantMap = new Map(allVariants.map(v=> [`${v.cardId}-${v.rarity}`, v]));
+
     const grouped: Record<string, {
       card: any;
       rarity: string;
@@ -30,9 +39,15 @@ export async function GET() {
 
     for (const uc of userCards) {
       const key = `${uc.cardId}-${uc.pulledRarity}`;
+      const variant = variantMap.get(key);
+      const cardWithVariant = {
+        ...uc.card,
+        // illustration par variante prioritaire
+        illustrationUrl: (variant as any)?.illustrationUrl || uc.card.illustrationUrl,
+      };
       if (!grouped[key]) {
         grouped[key] = {
-          card: uc.card,
+          card: cardWithVariant,
           rarity: uc.pulledRarity,
           mintNumber: uc.mintNumber,
           maxMint: uc.maxMint,
@@ -44,13 +59,6 @@ export async function GET() {
       grouped[key].quantity++;
       grouped[key].instances.push(uc.instanceId);
     }
-
-    // Toutes les variantes (carte × rareté) = 8 × 5 = 40 à collectionner
-    const allVariants = await prisma.cardScarcity.findMany({
-      include: { card: true },
-      orderBy: [{ cardId: 'asc' }, { rarity: 'asc' }],
-    });
-    const allCards = await prisma.card.findMany({ orderBy: { id: 'asc' } });
 
     // missing = variantes non possédées (par rareté)
     const ownedKeys = new Set(Object.keys(grouped)); // "card_001-COMMUNE"
@@ -74,15 +82,17 @@ export async function GET() {
       totalInGame: allCards.length,
       allVariants: allVariants.map(v => ({
         cardId: v.cardId,
-        card: v.card,
+        card: { ...v.card, illustrationUrl: (v as any).illustrationUrl || v.card.illustrationUrl },
         rarity: v.rarity,
         maxSupply: v.maxSupply,
+        illustrationUrl: (v as any).illustrationUrl || null,
       })),
       missingVariants: missingVariants.map(v => ({
         cardId: v.cardId,
-        card: v.card,
+        card: { ...v.card, illustrationUrl: (v as any).illustrationUrl || v.card.illustrationUrl },
         rarity: v.rarity,
         maxSupply: v.maxSupply,
+        illustrationUrl: (v as any).illustrationUrl || null,
       })),
       totalVariants: allVariants.length,
     });

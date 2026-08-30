@@ -29,6 +29,7 @@ export async function GET() {
       maxSupply: s.maxSupply,
       currentSupply: s.currentSupply,
       remaining: s.maxSupply === null ? null : s.maxSupply - s.currentSupply,
+      illustrationUrl: (s as any).illustrationUrl || null,
     })),
   }));
 
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
-  const { id, name, title, type, overallScore, illustrationUrl, iconUrl, actionDescription, actionValue, loreAlbum, scarcity } = body;
+  const { id, name, title, type, overallScore, illustrationUrl, iconUrl, actionDescription, actionValue, loreAlbum, scarcity, illustrations } = body;
 
   if (!id || !name || !title || !type) return NextResponse.json({ error: 'id/name/title/type requis' }, { status: 400 });
 
@@ -74,8 +75,9 @@ export async function POST(req: NextRequest) {
     for (const [rarity, val] of rarities) {
       if (val === undefined || val === 'NONE') continue; // n'existe pas
       const maxSupply = val === null || val === '' ? null : Number(val);
+      const variantUrl = illustrations?.[rarity] || null;
       await prisma.cardScarcity.create({
-        data: { cardId: id, rarity: rarity as any, maxSupply, currentSupply: 0 },
+        data: { cardId: id, rarity: rarity as any, maxSupply, currentSupply: 0, illustrationUrl: variantUrl },
       });
     }
 
@@ -120,6 +122,13 @@ export async function PATCH(req: NextRequest) {
             create: { cardId: id, rarity: rarity as any, maxSupply, currentSupply: 0 },
           });
         }
+      }
+    }
+    const illustrations = body.illustrations as any;
+    if (illustrations) {
+      for (const [rarity, url] of Object.entries(illustrations)) {
+        if (url === undefined) continue;
+        await prisma.cardScarcity.updateMany({ where: { cardId: id, rarity: rarity as any }, data: { illustrationUrl: url || null } });
       }
     }
 

@@ -39,8 +39,9 @@ export default function AdminPage() {
   const [sendPack, setSendPack] = useState<{ userId: string | 'all'; type: 'STANDARD' | 'PREMIUM' | 'WELCOME'; count: number } | null>(null);
   const [editingCard, setEditingCard] = useState<CardRow | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState<any>({ id:'', name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 } });
+  const [form, setForm] = useState<any>({ id:'', name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 }, illustrations:{ COMMUNE:'', RARE:'', ULTRA_RARE:'', SHINY:'', GOLD:'' } });
   const [uploading, setUploading] = useState(false);
+  const [uploadingRarity, setUploadingRarity] = useState<string | null>(null);
   const [viewColl, setViewColl] = useState<{ user: any, collection: any[] } | null>(null);
 
   useEffect(() => {
@@ -90,30 +91,34 @@ export default function AdminPage() {
     setActionLoading(null);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, rarity?: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    if (rarity) setUploadingRarity(rarity); else setUploading(true);
     const fd = new FormData();
     fd.append('file', file);
     fd.append('cardId', form.id || `card_${Date.now()}`);
     const r = await fetch('/api/admin/upload', { method: 'POST', body: fd });
     const d = await r.json();
-    if (!r.ok) alert(d.error || 'Upload échoué. Vérifie bucket/keys Supabase.');
-    else setForm((f:any)=>({ ...f, illustrationUrl: d.url }));
-    setUploading(false);
+    if (!r.ok) alert(d.error || 'Upload échoué.');
+    else {
+      if (rarity) setForm((f:any)=>({ ...f, illustrations: { ...f.illustrations, [rarity]: d.url } }));
+      else setForm((f:any)=>({ ...f, illustrationUrl: d.url }));
+    }
+    setUploading(false); setUploadingRarity(null);
   };
   const openCreate = () => {
-    setForm({ id:`card_${String(cards.length+1).padStart(3,'0')}`, name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 }});
+    setForm({ id:`card_${String(cards.length+1).padStart(3,'0')}`, name:'', title:'', type:'PERSONNAGE', overallScore:50, illustrationUrl:'', iconUrl:'', actionDescription:'', actionValue:0, loreAlbum:'', scarcity:{ COMMUNE:'', RARE:'', ULTRA_RARE:20, SHINY:3, GOLD:1 }, illustrations:{ COMMUNE:'', RARE:'', ULTRA_RARE:'', SHINY:'', GOLD:'' }});
     setEditingCard(null); setShowCreate(true);
   };
   const openEdit = (row: CardRow) => {
-    const sc: any = {};
+    const sc: any = {}; const ill: any = {};
     for (const k of ['COMMUNE','RARE','ULTRA_RARE','SHINY','GOLD']) {
       const found = row.scarcity.find(s=> s.rarity===k);
       sc[k] = found ? (found.maxSupply===null? '' : found.maxSupply) : 'NONE';
+      ill[k] = (found as any)?.illustrationUrl || '';
     }
-    setForm({ id:row.card.id, name:row.card.name, title:row.card.title, type:row.card.type, overallScore:row.card.overallScore, illustrationUrl:row.card.illustrationUrl||'', iconUrl:row.card.iconUrl||'', actionDescription:row.card.actionDescription, actionValue:row.card.actionValue, loreAlbum:row.card.loreAlbum, scarcity:sc });
+    setForm({ id:row.card.id, name:row.card.name, title:row.card.title, type:row.card.type, overallScore:row.card.overallScore, illustrationUrl:row.card.illustrationUrl||'', iconUrl:row.card.iconUrl||'', actionDescription:row.card.actionDescription, actionValue:row.card.actionValue, loreAlbum:row.card.loreAlbum, scarcity:sc, illustrations: ill });
     setEditingCard(row); setShowCreate(true);
   };
   const submitCard = async () => {
@@ -121,12 +126,15 @@ export default function AdminPage() {
       id: form.id, name:form.name, title:form.title, type:form.type, overallScore:Number(form.overallScore),
       illustrationUrl: form.illustrationUrl||null, iconUrl: form.iconUrl||null,
       actionDescription: form.actionDescription, actionValue: Number(form.actionValue), loreAlbum: form.loreAlbum,
-      scarcity: {}
+      scarcity: {},
+      illustrations: {}
     };
     for (const k of ['COMMUNE','RARE','ULTRA_RARE','SHINY','GOLD']){
       const v = form.scarcity[k];
       if (v==='NONE') payload.scarcity[k]='NONE';
       else payload.scarcity[k] = v===''||v===null ? null : Number(v);
+      const ill = form.illustrations?.[k];
+      if (ill !== undefined) payload.illustrations[k] = ill || null;
     }
     const method = editingCard ? 'PATCH' : 'POST';
     const body = editingCard ? { id: form.id, fields: { name:form.name, title:form.title, type:form.type, overallScore:Number(form.overallScore), illustrationUrl:form.illustrationUrl||null, iconUrl:form.iconUrl||null, actionDescription:form.actionDescription, actionValue:Number(form.actionValue), loreAlbum:form.loreAlbum }, scarcity: payload.scarcity } : payload;
@@ -339,7 +347,15 @@ export default function AdminPage() {
                               <input type="checkbox" checked={exists} onChange={e=> setForm({...form, scarcity:{...form.scarcity,[k]: e.target.checked ? '' : 'NONE'}})} />
                               {k} {exists?'':'— n\'existe pas'}
                             </label>
-                            {exists && <input placeholder="vide=∞" value={form.scarcity[k]} onChange={e=>setForm({...form, scarcity:{...form.scarcity,[k]:e.target.value}})} style={{width:'100%',padding:6,border:'1px solid #ddd',borderRadius:6,marginTop:4}} />}
+                            {exists && <>
+                              <input placeholder="vide=∞ (ex: 3)" value={form.scarcity[k]} onChange={e=>setForm({...form, scarcity:{...form.scarcity,[k]:e.target.value}})} style={{width:'100%',padding:6,border:'1px solid #ddd',borderRadius:6,marginTop:4}} />
+                              <input placeholder="Illustration variante URL (optionnel)" value={form.illustrations?.[k]||''} onChange={e=>setForm({...form, illustrations:{...form.illustrations,[k]:e.target.value}})} style={{width:'100%',padding:4,border:'1px dashed #c9a84c',borderRadius:6,marginTop:4,fontSize:'0.7rem'}} />
+                              <label style={{fontSize:'0.7rem',display:'flex',gap:4,alignItems:'center',marginTop:4,cursor:'pointer',color:'#6b5e52'}}>
+                                {uploadingRarity===k ? 'Upload...' : '📤 Image variante'}
+                                <input type="file" accept="image/*" onChange={e=>handleFileUpload(e,k)} style={{display:'none'}} disabled={uploadingRarity===k}/>
+                              </label>
+                              {form.illustrations?.[k] && <img src={form.illustrations[k]} alt="" style={{width:40,height:40,objectFit:'cover',borderRadius:4,marginTop:4}}/>}
+                            </>}
                             {!exists && <div style={{fontSize:'0.7rem',color:'#888',marginTop:4}}>Variante non créée</div>}
                           </div>
                         );

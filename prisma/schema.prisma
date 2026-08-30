@@ -139,11 +139,12 @@ model Card {
 /// This is the table that gets locked during booster openings
 /// to prevent race conditions on numbered cards.
 model CardScarcity {
-  id            Int     @id @default(autoincrement())
-  cardId        String  @map("card_id")
-  rarity        Rarity
-  maxSupply     Int?    @map("max_supply") // NULL = unlimited
-  currentSupply Int     @default(0) @map("current_supply")
+  id              Int     @id @default(autoincrement())
+  cardId          String  @map("card_id")
+  rarity          Rarity
+  maxSupply       Int?    @map("max_supply") // NULL = unlimited
+  currentSupply   Int     @default(0) @map("current_supply")
+  illustrationUrl String? @map("variant_illustration_url") // par variante SHINY/GOLD différente
 
   card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
