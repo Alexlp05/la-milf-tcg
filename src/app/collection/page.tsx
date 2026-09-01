@@ -103,7 +103,7 @@ export default function CollectionPage() {
   return (
     <main className={styles.collectionPage}>
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={()=>router.push('/')}>←</button>
+        <button className={styles.backBtn} onClick={()=>router.push('/')} aria-label="Retour à l'accueil">←</button>
         <div className={styles.headerTitle}>Collection</div>
         <div className={styles.statsBadge}>{stats.totalInGame - missing.length}/{stats.totalInGame}</div>
       </header>
@@ -184,7 +184,7 @@ export default function CollectionPage() {
                 <div key={item.instances[0]} className={styles.cardItem} onClick={()=>setSelectedCard(item)} style={{cursor:'pointer'}}>
                   {item.quantity>1 && <div className={styles.quantityBadge}>x{item.quantity}</div>}
                   <CardFrame card={item.card} rarity={item.rarity} mintNumber={item.mintNumber??undefined} maxMint={item.maxMint??undefined} size="small" isFlipped revealPhase="C" />
-                  <div style={{textAlign:'center',marginTop:6,lineHeight:1.1}}><div style={{fontSize:'0.75rem',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>{item.card.name} <span style={{fontSize:'0.55rem',background: RARITY_FILTERS.find(r=>r.id===item.rarity)?.color || '#888',color:'white',padding:'1px 4px',borderRadius:4}}>{item.rarity}</span></div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{item.card.id} • {item.card.title}</div></div>
+                  <div style={{textAlign:'center',marginTop:6,lineHeight:1.1}}><div style={{fontSize:'0.75rem',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>{item.card.name} <span style={{fontSize:'0.55rem',background: item.rarity==='SHINY'?'#fff7d4':item.rarity==='GOLD'?'#fff4b0':RARITY_FILTERS.find(r=>r.id===item.rarity)?.color || '#888',color: item.rarity==='SHINY'||item.rarity==='GOLD'?'#8b7634':'white',padding:'2px 5px',borderRadius:4,border: item.rarity==='SHINY'?'1px solid #c9a84c':item.rarity==='GOLD'?'1px solid #daa520':'none'}}>{item.rarity}</span></div><div style={{fontSize:'0.6rem',color:'var(--color-text-muted)'}}>{item.card.id} • {item.card.title}</div></div>
                 </div>
               );
             }

@@ -40,7 +40,7 @@ export default function TradesPage(){
   return (
     <main style={{minHeight:'100dvh',background:'var(--color-bg-primary)',paddingBottom:40}}>
       <header style={{display:'flex',alignItems:'center',gap:12,padding:'16px 20px',background:'rgba(255,255,255,0.9)',borderBottom:'1px solid #eee',position:'sticky',top:0}}>
-        <button onClick={()=>router.push('/')} style={{width:40,height:40,borderRadius:'50%',border:'1px solid #ddd',background:'white'}}>←</button>
+        <button onClick={()=>router.push('/')} aria-label="Retour à l'accueil" style={{width:40,height:40,borderRadius:'50%',border:'1px solid #ddd',background:'white'}}>←</button>
         <h1 style={{flex:1,fontFamily:'var(--font-display)',fontWeight:800}}>Échanges</h1>
         <span style={{background:'linear-gradient(135deg,#c9a84c,#e8d48b)',color:'white',padding:'6px 12px',borderRadius:999,fontSize:'0.8rem',fontWeight:700}}>Frais {fee} ✨</span>
       </header>

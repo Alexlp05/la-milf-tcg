@@ -44,6 +44,17 @@ export default function AdminPage() {
   const [uploadingRarity, setUploadingRarity] = useState<string | null>(null);
   const [viewColl, setViewColl] = useState<{ user: any, collection: any[] } | null>(null);
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    try { const r = await fetch('/api/admin/users'); const d = await r.json(); if (r.ok) setUsers(d.users||[]); } catch{} finally{ setLoading(false); }
+  };
+  const fetchCards = async () => {
+    const r = await fetch('/api/admin/cards'); const d = await r.json(); if (r.ok){ setCards(d.cards||[]); setTotals(d.totals||[]); }
+  };
+  const fetchConfig = async () => {
+    const r = await fetch('/api/admin/config'); const d = await r.json(); if (r.ok) setConfig(d);
+  };
+
   useEffect(() => {
     if (status === 'authenticated' && (session as any)?.user?.role === 'ADMIN') {
       fetchUsers(); fetchCards(); fetchConfig();
@@ -60,17 +71,6 @@ export default function AdminPage() {
       </div>
     );
   }
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    try { const r = await fetch('/api/admin/users'); const d = await r.json(); if (r.ok) setUsers(d.users||[]); } catch{} finally{ setLoading(false); }
-  };
-  const fetchCards = async () => {
-    const r = await fetch('/api/admin/cards'); const d = await r.json(); if (r.ok){ setCards(d.cards||[]); setTotals(d.totals||[]); }
-  };
-  const fetchConfig = async () => {
-    const r = await fetch('/api/admin/config'); const d = await r.json(); if (r.ok) setConfig(d);
-  };
 
   const handleUserAction = async (userId: string, action: 'approve'|'ban'|'unban') => {
     setActionLoading(userId);
@@ -175,7 +175,7 @@ export default function AdminPage() {
   return (
     <main className={styles.adminPage}>
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={() => router.push('/')}>← Retour</button>
+        <button className={styles.backBtn} onClick={() => router.push('/')} aria-label="Retour à l'accueil">← Retour</button>
         <h1 className={styles.headerTitle}>Administration</h1>
         <span className={styles.adminBadge}>Admin</span>
       </header>
@@ -331,7 +331,7 @@ export default function AdminPage() {
                         {uploading ? 'Upload...' : '📤 Choisir fichier'}
                         <input type="file" accept="image/*" onChange={handleFileUpload} style={{display:'none'}} disabled={uploading}/>
                       </label>
-                      {form.illustrationUrl && <img src={form.illustrationUrl} alt="preview" style={{width:48,height:64,objectFit:'cover',borderRadius:6,border:'1px solid #ddd'}}/>}
+                      {form.illustrationUrl && <img src={form.illustrationUrl} alt={`Aperçu ${form.name || form.id}`} style={{width:48,height:64,objectFit:'cover',borderRadius:6,border:'1px solid #ddd'}}/>}
                       <span style={{fontSize:'0.7rem',color:'#888'}}>Recommandé 840×1176 WebP &lt;500KB</span>
                     </div>
                     {/* iconUrl caché */}
@@ -354,7 +354,7 @@ export default function AdminPage() {
                                 {uploadingRarity===k ? 'Upload...' : '📤 Image variante'}
                                 <input type="file" accept="image/*" onChange={e=>handleFileUpload(e,k)} style={{display:'none'}} disabled={uploadingRarity===k}/>
                               </label>
-                              {form.illustrations?.[k] && <img src={form.illustrations[k]} alt="" style={{width:40,height:40,objectFit:'cover',borderRadius:4,marginTop:4}}/>}
+                              {form.illustrations?.[k] && <img src={form.illustrations[k]} alt={`Variante ${k} ${form.name}`} style={{width:40,height:40,objectFit:'cover',borderRadius:4,marginTop:4}}/>}
                             </>}
                             {!exists && <div style={{fontSize:'0.7rem',color:'#888',marginTop:4}}>Variante non créée</div>}
                           </div>

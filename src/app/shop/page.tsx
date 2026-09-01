@@ -30,7 +30,7 @@ export default function ShopPage(){
   return (
     <main className={styles.shopPage}>
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={()=>router.push('/')}>←</button>
+        <button className={styles.backBtn} onClick={()=>router.push('/')} aria-label="Retour à l'accueil">←</button>
         <h1 className={styles.headerTitle}>Boutique</h1>
         <div className={styles.dustBadge}>✨ {dust}</div>
       </header>

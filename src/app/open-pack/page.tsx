@@ -70,7 +70,7 @@ export default function OpenPackPage() {
   return (
     <main className={styles.openPackPage}>
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={()=>router.push('/')}>←</button>
+        <button className={styles.backBtn} onClick={()=>router.push('/')} aria-label="Retour à l'accueil">←</button>
         <div className={styles.headerTitle}>Ouvrir un Booster</div>
       </header>
 
