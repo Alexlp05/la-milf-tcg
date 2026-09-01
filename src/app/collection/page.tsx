@@ -128,12 +128,12 @@ export default function CollectionPage() {
       </header>
 
       <div className={styles.content}>
-        {/* Progress double : cartes uniques + variantes */}
+        {/* Progress : chaque rareté = carte à part entière */}
         <div style={{background:'white',borderRadius:16,padding:14,border:'1px solid rgba(26,22,18,0.08)',boxShadow:'0 2px 12px rgba(0,0,0,0.04)',marginBottom:12}}>
           <div style={{display:'grid',gap:8}}>
             <div>
               <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.85rem',marginBottom:4}}>
-                <strong>{allCards.length - missing.length} / {allCards.length} cartes uniques</strong><span style={{color:'var(--color-text-muted)'}}>{missing.length} manquent</span>
+                <strong>{allCards.length - missing.length} / {allCards.length} illustrations uniques</strong><span style={{color:'var(--color-text-muted)'}}>{missing.length} manquent</span>
               </div>
               <div style={{height:8,background:'rgba(26,22,18,0.08)',borderRadius:999,overflow:'hidden'}}>
                 <div style={{height:'100%',width:`${allCards.length? Math.round(((allCards.length-missing.length)/allCards.length)*100):0}%`,background:'#4a7cc9',borderRadius:999}}/>
@@ -141,7 +141,7 @@ export default function CollectionPage() {
             </div>
             <div>
               <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.85rem',marginBottom:4}}>
-                <strong>{stats.uniqueCards} / {stats.totalVariants || 40} variantes</strong><span style={{color:'var(--color-text-muted)'}}>{stats.totalCards} exemplaires</span>
+                <strong>{stats.uniqueCards} / {stats.totalVariants || 40} cartes</strong><span style={{color:'var(--color-text-muted)'}}>{stats.totalCards} exemplaires</span>
               </div>
               <div style={{height:8,background:'rgba(26,22,18,0.08)',borderRadius:999,overflow:'hidden'}}>
                 <div style={{height:'100%',width:`${progress}%`,background:'linear-gradient(90deg, #c9a84c, #e8d48b)',borderRadius:999}}/>
@@ -149,17 +149,17 @@ export default function CollectionPage() {
             </div>
           </div>
           <div style={{fontSize:'0.72rem',color:'var(--color-text-muted)',marginTop:8}}>
-            {viewMode==='cards' && missing.length>0 ? <>Cartes manquantes : <strong>{missing.map(m=>m.id).join(', ')}</strong></> : missingVariants.length>0 ? <>Variantes manquantes : <strong>{missingVariants.slice(0,4).map((v:any)=> `${v.cardId}-${v.rarity}`).join(', ')}{missingVariants.length>4?` +${missingVariants.length-4}`:''}</strong></> : <>🎉 Full set !</>}
+            {viewMode==='cards' && missing.length>0 ? <>Illustrations manquantes : <strong>{missing.map(m=>m.id).join(', ')}</strong></> : missingVariants.length>0 ? <>Cartes manquantes : <strong>{missingVariants.slice(0,4).map((v:any)=> `${v.cardId} ${v.rarity}`).join(', ')}{missingVariants.length>4?` +${missingVariants.length-4}`:''}</strong></> : <>🎉 Full set !</>}
           </div>
         </div>
 
         {/* Vues */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
           <button onClick={()=>setViewMode('cards')} className={`${styles.filterBtn} ${viewMode==='cards'?styles.active:''}`} style={{justifyContent:'center',display:'flex',gap:6,padding:'12px 8px',fontWeight:800,borderWidth:2}}>
-            🃏 Cartes {allCards.length - missing.length}/{allCards.length}
+            🃏 Illustrations {allCards.length - missing.length}/{allCards.length}
           </button>
           <button onClick={()=>setViewMode('album')} className={`${styles.filterBtn} ${viewMode==='album'?styles.active:''}`} style={{justifyContent:'center',display:'flex',gap:6,padding:'12px 8px',fontWeight:800,borderWidth:2}}>
-            ✨ Variantes {stats.uniqueCards}/{stats.totalVariants||40}
+            ✨ Cartes {stats.uniqueCards}/{stats.totalVariants||40}
           </button>
         </div>
         <div style={{display:'flex',gap:8,marginBottom:12}}>
@@ -170,10 +170,10 @@ export default function CollectionPage() {
           ))}
         </div>
         <div style={{fontSize:'0.72rem',color:'var(--color-text-muted)',marginBottom:12,textAlign:'center',minHeight:18}}>
-          {viewMode==='cards' && 'Cartes uniques : possédée si au moins 1 variante. Idéal pour voir ce qui te manque.'}
-          {viewMode==='album' && 'Variantes : 8×5 max, mais seules les variantes cochées “Existe” en Admin comptent. SHINY/GOLD = secrètes.'}
-          {viewMode==='owned' && 'Tes variantes obtenues.'}
-          {viewMode==='missing' && 'Toutes les variantes non obtenues.'}
+          {viewMode==='cards' && 'Illustrations : une par carte, peu importe la rareté.'}
+          {viewMode==='album' && 'Cartes : chaque rareté = carte à part entière (ex: T-Max COMMUNE ≠ T-Max GOLD).'}
+          {viewMode==='owned' && 'Tes cartes obtenues.'}
+          {viewMode==='missing' && 'Celles qui te manquent.'}
         </div>
 
         {/* Recherche */}

@@ -134,11 +134,8 @@ export default function OpenPackPage() {
                     }}
                     onClick={e=>{ e.stopPropagation(); if(isActive) handlePileTap(); }}
                   >
-                    {(pull as any).isNewCard && isActive && flipped[i] && (
-                      <div style={{position:'absolute',top:-12,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#ff3b30,#ff9500)',color:'white',padding:'4px 10px',borderRadius:999,fontSize:'0.7rem',fontWeight:800,boxShadow:'0 4px 12px rgba(255,59,48,0.4)',zIndex:30,whiteSpace:'nowrap'}}>✨ NOUVELLE CARTE !</div>
-                    )}
-                    {(pull as any).isNewVariant && !(pull as any).isNewCard && isActive && flipped[i] && (
-                      <div style={{position:'absolute',top:-12,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#34c759,#5ac8fa)',color:'white',padding:'4px 10px',borderRadius:999,fontSize:'0.7rem',fontWeight:800,boxShadow:'0 4px 12px rgba(52,199,89,0.4)',zIndex:30,whiteSpace:'nowrap'}}>🆕 NOUVELLE VARIANTE !</div>
+                    {(pull as any).isNewVariant && isActive && flipped[i] && (
+                      <div style={{position:'absolute',top:-12,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#34c759,#5ac8fa)',color:'white',padding:'4px 10px',borderRadius:999,fontSize:'0.7rem',fontWeight:800,boxShadow:'0 4px 12px rgba(52,199,89,0.4)',zIndex:30,whiteSpace:'nowrap'}}>✨ NOUVEAU !</div>
                     )}
                     <CardFrame
                       card={pull.card}
@@ -168,8 +165,7 @@ export default function OpenPackPage() {
               {pulledCards.map(p=>(
                 <div key={p.instanceId} className={styles.finishedCard} onClick={()=>setSelectedFinished(p)} style={{cursor:'pointer', position:'relative'}}>
                   <CardFrame card={p.card} rarity={p.rarity} mintNumber={p.mintNumber} maxMint={p.maxMint} isFlipped revealPhase="C" size="small" />
-                  {(p as any).isNewCard && <span style={{position:'absolute',top:-6,left:'50%',transform:'translateX(-50%)',background:'#ff3b30',color:'white',fontSize:'0.6rem',fontWeight:800,padding:'2px 6px',borderRadius:999,whiteSpace:'nowrap'}}>NOUVEAU</span>}
-                  {(p as any).isNewVariant && !(p as any).isNewCard && <span style={{position:'absolute',top:-6,left:'50%',transform:'translateX(-50%)',background:'#34c759',color:'white',fontSize:'0.6rem',fontWeight:800,padding:'2px 6px',borderRadius:999,whiteSpace:'nowrap'}}>VARIANTE</span>}
+                  {(p as any).isNewVariant && <span style={{position:'absolute',top:-6,left:'50%',transform:'translateX(-50%)',background:'#34c759',color:'white',fontSize:'0.6rem',fontWeight:800,padding:'2px 6px',borderRadius:999,whiteSpace:'nowrap'}}>NOUVEAU</span>}
                 </div>
               ))}
             </div>
